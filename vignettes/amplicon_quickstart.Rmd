@@ -1,0 +1,87 @@
+---
+title: "Quickstart"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{quickstart}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(vdbR)
+library(tidyverse)
+library(speedyseq)
+library(microViz)
+theme_set(theme_classic())
+
+DEBUG = FALSE
+if (Sys.getenv("GITHUB_ACTIONS") != ""){
+  psql_con = DBI::dbConnect(RSQLite::SQLite(), "tests/db.sqlite") 
+  get_table_from_database("samples")
+  frozen_set_ag <- samples
+} else {
+  connect_database() 
+  get_table_from_database("frozen_set_ag")
+}
+  
+get_table_from_database("asv_annotation_blast_color_ag")
+
+
+```
+
+Lets start by getting some metadata. For simplicity we will pull a frozen set, but in practice it could be any dataframe containing sampleids. We will use phyloseq's `tax_glom` to aggregate the data at the genus level.
+
+```{r}
+phy_amplicon <- vdb_make_phylo(frozen_set_ag %>% dplyr::sample_n(100)) %>% 
+  phyloseq::tax_glom("genus")  %>% 
+  microViz::tax_fix()
+```
+Lets add in the alpha diversity:
+```{r}
+sample_data(phy_amplicon) <- cbind(
+  sample_data(phy_amplicon),
+  suppressWarnings(estimate_richness(phy_amplicon, measures = "InvSimpson"))
+)
+ggplot(sample_data(phy_amplicon) %>% as_tibble() %>% filter(day_relative_to_hct > -10 & day_relative_to_hct < 30), aes(x=day_relative_to_hct, y=InvSimpson, color=institution)) + geom_smooth() + geom_point()
+```
+
+
+
+The MicroVis takes a lot of the annoying considerations out of building the classic stacked bar plots.
+```{r}
+tax_table(phy_amplicon) <- clean_refseq_genus(phy_amplicon)
+
+mypal <- make_microviz_palette(phy_amplicon, n=30, rank="genus", color_db=asv_annotation_blast_color_ag) 
+phy_amplicon %>%
+  comp_barplot(tax_level = "genus", palette = mypal, n_taxa=30 ) +
+  facet_grid( ~institution, scales = "free", space = "free") + 
+  theme(axis.text.x = element_blank()) + 
+  theme(legend.position = "bottom", legend.direction = "horizontal")
+
+```
+
+Lets plot some beta diversity
+```{r}
+dists <- distance(phy_amplicon, method = "bray")
+ord <- ordinate(phy_amplicon, method = "PCoA", distance = dists)
+plot_ordination(phy_amplicon, ord, color="institution")
+
+```
+
+```{r}
+tsne <- make_tsne(dists) %>% 
+  left_join(as_tibble(sample_data(phy_amplicon)) %>% rename(sampleid = .sample))
+
+ggplot(tsne, aes(t1_scaled, t2_scaled, color = institution)) +
+  geom_point() 
+```
+

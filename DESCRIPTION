@@ -1,0 +1,55 @@
+Package: vdbR
+Title: A Package for Acessing and Processing Microbiome Data
+Version: 0.6.2
+Authors@R: 
+    c(person(given = "Antonio",
+           family = "Gomes",
+           role = c("aut", "cre"),
+           email = "gomesa@mskcc.org",
+           comment = c(ORCID = "0000-0003-3790-3724")),
+   person(given = "Anqi",
+           family = "Dai",
+           role = c("aut"),
+           email = "daia1@mskcc.org",
+           comment = c(ORCID = "")),
+    person(given = "Chi",
+           family = "Nguyen",
+           role = c("aut"),
+           email = "nguyenc1@sloankettering.edu",
+           comment = c(ORCID = "")),
+    person(given = "Anastasia",
+           family = "Kousa",
+           role = c("aut"),
+           email = "kousaa@mskcc.org",
+           comment = c(ORCID = "")),
+    person(given = "Nick",
+           family = "Waters",
+           role = c("aut"),
+           email = "watersn@mskcc.org",
+           comment = c(ORCID = "")))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+biocViews: 
+Depends: 
+    R (>= 3.5.0),
+Imports: 
+    dbplyr,
+    dplyr,
+    data.table,
+    tibble,
+    tidyr,
+    phyloseq,
+    DBI,
+    RPostgres,
+    magrittr,
+    Biostrings
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr

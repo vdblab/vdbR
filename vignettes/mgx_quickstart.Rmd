@@ -1,0 +1,135 @@
+---
+title: "Metagenomic Quickstart"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{mgx-quickstart}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(vdbR)
+library(tidyverse)
+library(speedyseq)
+library(microViz)
+theme_set(theme_classic())
+connect_database()
+
+```
+
+Lets start by getting some metadata. For this example, we will all the Zymo mock samples.  Using the isabl web UI, copy all the sample data and make a data.frame:
+
+```{r}
+metadata <- read.csv(comment.char = "#", text="Sample SystemID	SampleID	Category
+MB_H003732_MC01	PJlibH_GutZymo	MOCK_CONTROL
+MB_H003678_MC01	GutZymoDiet	MOCK_CONTROL
+MB_H001440_MC08	GUTZYMO.1177	MOCK_CONTROL
+MB_H001440_NC03	MMF_hc_E_GutZymo	MOCK_CONTROL
+MB_H001440_MC07	QM154_GutZymo	MOCK_CONTROL
+MB_H001440_MC06	ZB132_GutZymo	MOCK_CONTROL
+MB_H001440_MC05	PF53_GutZymo	MOCK_CONTROL
+MB_H001440_MC04	PC26_GutZymo	MOCK_CONTROL
+MB_H001440_MC03	GutZymo	MOCK_CONTROL
+MB_H001440_NC01	GutZymo_28	MOCK_CONTROL
+MB_H001440_MC02	GutZymo1	MOCK_CONTROL
+MB_H001440_MC01	Zymo	MOCK_CONTROL
+MB_H001440_N02	zymostandard2	MOCK_CONTROL
+MB_H001440_N01	zymostandard1	MOCK_CONTROL", sep="\t", )
+```
+
+Samples in isabl are associated with sequncing runs called "experiments", and these experiments are processed with "applications".  Lets get a look at all the available applications:
+```{r}
+apps <- tbl(psql_con, "isabl_api_application") %>% collect()
+```
+
+First, we can pull all the sample QC data for these samples.  The QC data is retrieved from the Preprocessing app. we can see that the most recent preprocessing app is 3.0.0, corresponding to app ID 43.
+
+
+```{r}
+zymo_preprocess_analyses <- get_isabl_analyses(sampleids = metadata$SampleID, app_id = "43")
+
+```
+
+> NOTE: you could also see all the available apps by looking on the web UI
+
+Now, we can use the Isabl analysis ID `ia_id` to collect the qc data from the database:
+```{r}
+get_table_from_database("mgx_qc")
+zymo_qc <- mgx_qc %>% filter(ia_id %in% zymo_preprocess_analyses$ia_id)
+ggplot(zymo_qc, aes(x=1-(nreads_deduplicated/nreads_raw), y=as.character(ia_id))) + geom_point()
+
+```
+
+Now lets pull the metaphlan results. We run the mocks as Human samples (as opposed to mouse), we are looking for entries corresponding to assembly "3". looking at the applications we can filter for the Biobakery app:
+```{r}
+apps %>% filter(grepl("Biobakery", name),  assembly_id == 3)
+```
+
+Application ID `66` corresponds to the most recent version of the biobakery app for non-downsampled data.
+
+
+Now that we have our sampleids and our application id, we can now pull the metaphlan results. Metaphlan reports relative abundances as a percent, and  an optional output for reads attributed to a certain clade.  Because many of the phyloseq functions expect counts rather than a percentage, we can transform to counts per million
+
+>We should proabably make this an argument to vdb_make_phylo_mgx, allowing users to use either relative abundances or attributed counts data type.
+
+```{r}
+phymgx <- vdb_make_phylo_mgx(metadata, sampleid_col = "SampleID", app_id = 66) %>% 
+  speedyseq::transform_sample_counts(fun = function(x) round(x*1e6, 0))
+phymgx
+
+```
+
+Lets add in the alpha diversity. Phyloseq will (rightly) complain that metaphlan isn't returning true counts and there won't be singletons. You can calculate this separately via the metaphlan attributed counts, a read-based tool like kraken, etc.
+
+```{r}
+# this calculates it on the fly
+plot_richness(phymgx, measures="InvSimpson")
+
+# ... but we can also add it to our metadata
+sample_data(phymgx) <- cbind(
+  sample_data(phymgx),
+  estimate_richness(phymgx, measures = "InvSimpson")
+)
+```
+
+
+We will use phyloseq's `tax_glom` to aggregate the data at the genus level. Additionally, we will use a function `clean_SGB_genus` to tidy up uninformative Species Genome Bin names from metaphlan >=4.
+
+```{r}
+phyloseq::tax_table(phymgx) <- clean_SGB_genus(phymgx)
+phymgx_genus <- phymgx %>% 
+  phyloseq::tax_glom("genus") 
+```
+
+The microViz takes a lot of the annoying considerations out of building the classic stacked bar plots.
+```{r}
+get_table_from_database("asv_annotation_blast_color_ag")
+yt_et_al_pal <-  make_microviz_palette(phymgx_genus, n=20, rank='genus', color_db=asv_annotation_blast_color_ag)
+
+phymgx_genus %>%
+  microViz::tax_fix() %>% 
+  comp_barplot(tax_level = "genus", n_taxa = 20, palette = yt_et_al_pal) +
+  coord_flip() + 
+  theme(legend.position = "bottom", legend.direction = "horizontal")
+
+```
+
+Lets plot some beta diversity:
+```{r}
+dists <- distance(phymgx_genus, method = "bray")
+ord <- ordinate(phymgx_genus, method = "PCoA", distance = dists)
+plot_ordination(phymgx_genus, ord)
+
+```
+
+
+

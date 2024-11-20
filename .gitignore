@@ -1,0 +1,8 @@
+.Rproj.user
+.DS_Store
+
+vdbR.Rproj
+.Rbuildignore
+.Rhistory
+inst/doc
+tests/tmp*
