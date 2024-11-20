@@ -1,3 +1,78 @@
+# Currently this is just hard coded, ideally would read in from postgres:
+base_colors = c(other="#BBBBBB",
+                    p__Actinobacteria = "#A77097", p__Bacteroidetes = "#51AB9B", p__Proteobacteria = "#AB3535", # "#FF0000". Ying had used full red spectrum. I used DD0000 to increase spectrum.
+                    o__Clostridiales = "#9C854E",
+                    o__Erysipelotrichales = "#7A6920", #o__Erysipelotrichales = "#ACA54D", #Erysipelotrichales order has been added mainly due to high frequency of genus: Erysipelatoclostridium.
+                    f__Lachnospiraceae = "#EC9B96", f__Ruminococcaceae = "#FF7106" ,#"#9AAE73",
+                    g__Enterococcus = "#129246", g__Lactobacillus = "#3B51A3", g__Staphylococcus = "#F1EB25", g__Streptococcus = "#9FB846",
+                    g__Escherichia = "#800026", g__Klebsiella = "#FF2211",
+                    g__Akkermansia = "#377EB8");
+
+taxa_order = c(phylum="p", class="c", order="o", family="f", genus="g")
+
+#' This function will generate a color close to the original color comp provided
+#' 
+#' @param rgb_component the component to randomly adjust
+#' @param magnitude the maximum amount to adjust rgb component by (default 4)
+#' @export
+#' @name norm_generate_component
+norm_generate_component <- function(rgb_component, magnitude = 7){
+  rgb_component <- rgb_component + sample(-magnitude:magnitude, 1)
+  rgb_component <- min(255, max(0, rgb_component))
+}
+
+#' This function will generate a color close to the original color provided
+#' 
+#' @param color color to randomly adjust (as hex color)
+#' @export
+#' @name blur_color
+blur_color <- function(color){
+  rgb_comps <- col2rgb(color)
+  return(rgb(
+    norm_generate_component(rgb_comps[1]), 
+    norm_generate_component(rgb_comps[2]), 
+    norm_generate_component(rgb_comps[3]), 
+    maxColorValue = 255, 
+    names = NULL))
+
+}
+
+
+
+#' This function will generate colors for the taxa_levels provided based on the base_colors and the taxa levels.
+#' New colors will be generated in a spread on the appropriate rank. 
+#' 
+#' @param palette the palette to overwrite colors for.
+#' @param full_taxonomy full taxonomy rows for the species to generate colors for.
+#' @param rank the rank of the palette
+#' @export
+#' @name rename_taxa_colors
+rename_taxa_colors <- function(palette, full_taxonomy, rank){
+  color_group_tax_info = data.frame(group = names(base_colors)) %>%
+    dplyr::mutate(tax_level = stringr::str_split(group, "__", simplify = T)[, 1])
+  inds_to_adjust = rep(FALSE, length(palette))
+  new_palette = unname(palette)
+  t_names = names(palette)
+  for(tax_level in colnames(full_taxonomy) ){
+    ind_cur_tax_level = which(color_group_tax_info[,"tax_level"] == taxa_order[tax_level])
+    annotation_level_cur = full_taxonomy[tax_level]
+    for(i_tax_cur in ind_cur_tax_level ){
+      new_palette[inds_to_adjust] <- purrr::map(new_palette[inds_to_adjust], blur_color)
+      matching_taxonomy = annotation_level_cur == color_group_tax_info[i_tax_cur,"group"]
+      new_palette[matching_taxonomy] <- base_colors[color_group_tax_info[i_tax_cur,"group"]]
+      inds_to_adjust = apply(matrix(c(inds_to_adjust, matching_taxonomy), 2), 2, any) #update the inds to adjust vector by adding in those modified at this level
+      #rotate so that the values of each matchin taxonomy are adjacent:
+      new_palette <- c(new_palette[matching_taxonomy], new_palette[!matching_taxonomy])
+      t_names <- c(t_names[matching_taxonomy], t_names[!matching_taxonomy])
+      inds_to_adjust <- c(inds_to_adjust[matching_taxonomy], inds_to_adjust[!matching_taxonomy])
+    }
+  } 
+  new_palette <- c(new_palette, "lightgrey")
+  new_palette <- as.character(new_palette)
+  names(new_palette) <- c(names(palette), "Other")
+  return(new_palette)
+}
+
 #' This function will create a microviz palette for phy_seq_obj and use db of colors where possible. 
 #' Note, this function will use Genus names as the keys for the color table. If working with SGB names
 #' it is recommended to first clean the tax table of the phyloseq object with the clean_SGB_genus 
@@ -6,11 +81,9 @@
 #' @param phy_seq_obj the phyloseq object for which the palette is being made. 
 #' @param n the number of unique taxa to use in the palette (should match what is being used in the plot)
 #' @param rank the taxonomic rank being used in the plot and the palette 
-#' @param color_db a table to use for overwriting color values. requires genus, color and color_label_group as columns. (eg. asv_annotation_blast_color_ag)
 #' @export
 #' @name make_microviz_palette
-#' 
-make_microviz_palette <- function(phy_seq_obj, n, rank, color_db){
+make_microviz_palette <- function(phy_seq_obj, n, rank){
   
   # for our list of required packages run through and insure they are installed:
   req_packages = c("microViz")
@@ -20,53 +93,19 @@ make_microviz_palette <- function(phy_seq_obj, n, rank, color_db){
       return(NULL)
     }
   }
-  
-  # test that the genus column is formatted consistently for color_db
-  test_df <- phyloseq::tax_table(phy_seq_obj) %>%
-    as.data.frame() %>%
-    dplyr::mutate(formatted = grepl("^[gfocp]__.+", genus) | grepl("other", genus))
-  
-  if(!all(test_df$formatted)){
-    warning("Not all entries in provided genus column of phy_seq_obj seem to be \
-            Properly formatted,  Consider cleaning using clean_SGB_genus. \
-            Failure to do so means colors may not be successfully overwritten. ")
-  }
-  
-  # process color db, making it unique with respect to genus and selecting required columns:
-  color_table <- color_db %>%
-    as.data.frame() %>%
-    dplyr::group_by(genus) %>%
-    dplyr::mutate(first_seen = dplyr::row_number() == 1) %>%
-    dplyr::ungroup() 
-  color_table <- color_table[which(color_table$first_seen),] %>% #drop all non-unique genus entries. 
-    dplyr::select(genus, color_label_group, color)
-  
+
   #make the default palette based on phyloseq object and params:
-  my_palette <- microViz::tax_palette(phy_seq_obj, n=n, rank=rank) #get a palette with n/rank
-  
-  #convert palette names into color labels.  Note we strip any numbers here, and remove all unclassified tags.
-  color_labels <- names(my_palette) %>% 
-    as.data.frame()
-  names(color_labels)[1] <- "original_name"
-  color_labels <- color_labels %>%
-    dplyr::mutate(color_label_group = lapply(strsplit(original_name, ' '), '[', 1)) %>%
-    dplyr::mutate(color_label_group = stringr::str_remove(color_label_group, '_unclassified'))
-  
-  #for values in the palette which have another color in the db, overwrite:
-  for (i in 1:nrow(color_labels)){
-    genus = ''
-    name = color_labels[i,]$color_label_group
-    if (startsWith(name, 'g__')){ 
-      genus <- substr(name, 4, nchar(name))
-    }# prefer overwriting color by the genus name:
-    if (genus != '' & genus %in% color_table$genus) {
-      new_color = color_table[which(color_table$genus == genus),]$color
-      my_palette[color_labels[i,]$original_name] = new_color
-    } # when that is not possible, overwrite by first color_label_group:
-    else if (color_labels[i,]$color_label_group %in% color_table$color_label_group){
-      new_color = color_table[which(color_table$color_label_group == color_labels[i,]$color_label_group),][1,]$color
-      my_palette[color_labels[i,]$original_name] = new_color
-    }
-  }
-  return(my_palette)
+  my_palette <- microViz::tax_palette(phy_seq_obj, n=n, rank=rank, add = NA) #get a palette with n/rank
+  index_rank <- grep(rank, colnames(phyloseq::tax_table(phy_seq_obj)))
+
+  taxonomy <- phy_seq_obj %>%
+    phyloseq::tax_table() %>%
+    as.data.frame() %>%
+    dplyr::select(1:index_rank) %>%
+    dplyr::filter(.[[index_rank]] %in% names(my_palette)) %>%
+    unique()
+
+  #rename colors using basenames:
+  return(rename_taxa_colors(my_palette, taxonomy, rank))
+
 }

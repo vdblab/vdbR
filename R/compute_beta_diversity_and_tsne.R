@@ -21,9 +21,9 @@
 #' @param count count. sampleid, taxonomy and cout must have same length
 #' @export
 #' @name compute_beta_diversity_and_tsne
-#' @example
-#' We show how to compute a tsne map with 100 samples from
-#' frozen_set_ag based on the beta-diversity at genus level
+#' @examples
+#' # We show how to compute a tsne map with 100 samples from
+#' # frozen_set_ag based on the beta-diversity at genus level
 #' get_table_from_database("frozen_set_ag"); #getting samples from frozen set asv_counts_subset = get_counts_subset( frozen_set_ag$sampleid[1:100])
 #' get_table_from_database("asv_annotation_blast_ag"); #getting annotation
 #' m = merge(asv_counts_subset[,.(asv_key,sampleid,count)],asv_annotation_blast_ag[,.(asv_key,genus)])
@@ -298,8 +298,6 @@ f_scale_interval <- function(x, interval = c(-1, 1)) {
 #' @param dists distance matrix from the phyloseq/vegan::distance function
 #' @export
 #' @name make_tsne
-#' @example
-
 make_tsne <-  function(dists, perplexity = 20, max_iter = 3000, theta = 0.1, seed = 1){
   if (!requireNamespace("Rtsne", quietly = TRUE)) {
     warning("The Rtsne package must be installed to use this functionality")
