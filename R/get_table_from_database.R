@@ -1,3 +1,5 @@
+# 
+
 #' Querying database
 #' @name get_table_from_database
 #' @export
@@ -8,9 +10,7 @@
 #' @param sampleid_subset Only sampleids in this vector will be returned.
 #'
 get_table_from_database <- function(table_name, pre_filter = TRUE) {
-  if (!exists("psql_con")) {
-    stop("psql_con not found, not connected to the database. Please run connect_database()")
-  }
+  assert_db_connected()
   if (class(psql_con)[1] == "SQLiteConnection"){
     tb <- RSQLite::dbReadTable(psql_con, table_name)
   } else{

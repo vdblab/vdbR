@@ -59,10 +59,22 @@ check_config_location <- function(config_file) {
 #' @name connect_database
 #' @import data.table
 #' @param config_file file with login info to connect to database
+#' @param bundled conected to test sqlite database
 #' @export
 
 
-connect_database <- function(config_file) {
+connect_database <- function(config_file, bundled=FALSE) {
+  if (bundled){
+    psql_con = DBI::dbConnect(
+      RSQLite::SQLite(), 
+      system.file("extdata", "db.sqlite", package = "vdbR") 
+    )
+    assign("psql_con",
+           psql_con,
+           envir = .GlobalEnv
+    )
+    return()
+  }
   config_file <- check_config_location(config_file = config_file)
 
   config <- data.table::fread(config_file, nrows = 1)
@@ -93,11 +105,20 @@ connect_database <- function(config_file) {
     print("Your password was updated! Config file was changed accordingly")
   }
 
-  connect_database_resource <- function() {
-    connect_database(config_file)
-  }
-  assign("connect_database_resource",
-    connect_database_resource,
-    envir = .GlobalEnv
-  )
 }
+
+#' assert_db_connected
+#' @name assert_db_connected
+#' @param con string of global variable containing the connection, defaults to psql_con created by connect_database
+#' @export
+
+assert_db_connected <- function(con="psql_con") {
+  # TODO: this relies on scoping, which complicates testing unless you set global variables in tests
+  #  if (!con %in% ls(envir =parent.frame())){
+  if (!exists(con)){
+      # perhaps we should include the test db as package data instead
+    stop(paste0(con, " not found; please connect to production database by running `connect_database()` or to the test database with `connect_database(bundled=TRUE)`"))
+  }
+    
+}
+ 

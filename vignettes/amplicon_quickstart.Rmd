@@ -23,16 +23,10 @@ library(speedyseq)
 library(microViz)
 theme_set(theme_classic())
 
+
 DEBUG = FALSE
-if (Sys.getenv("GITHUB_ACTIONS") != ""){
-  psql_con = DBI::dbConnect(RSQLite::SQLite(), "tests/db.sqlite") 
-  get_table_from_database("samples")
-  frozen_set_ag <- samples
-} else {
-  connect_database() 
-  get_table_from_database("frozen_set_ag")
-}
-  
+connect_database(bundled=Sys.getenv("GITHUB_ACTIONS") != "")
+get_table_from_database("frozen_set_ag")
 get_table_from_database("asv_annotation_blast_color_ag")
 
 

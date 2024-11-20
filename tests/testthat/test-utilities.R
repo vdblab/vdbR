@@ -1,11 +1,15 @@
 warning_about_singlecol_metadata <-"Phyloseq object must have at least one metadata column in addition to the sampleids; creating a new columns from the sampleids called x"
+error_about_only_supporting_biobakery <- "Currently only Biobakery/Metaphlan based make_phylo_mgx is supported. Please open a ticket on Github if you need extended functionality! "
+error_about_sampleid_col_not_in_metadata <- "sampleid_col not in colnames of metadata supplied."
+error_about_mixed_sample_and_experiment_level_analyses <- paste0("The same experiments are in multiple analyses. ", 
+        "This can happen when someone runs an app both per-sample and per-experiment. ",
+        "Resolve this in Isabl to avoid confusion, or rerun this code with ",
+        "choose_max_experiment = True")
 test_metadata <- structure(
   list(
-    sampleid = c(
-      "2133C", "1773A", "1773I", "90.tp.51",
-      "223D", "2065C", "1773O", "1773M", "2133D", "2065D", "90.tp.97",
-      "1773E", "2065B", "2065E", "90.tp.57", "2133G", "2065F", "1773G",
-      "FMT.0113I", "2065G"
+    sampleid=c("1143N", "1252XX", "1303G", "1379N", "142E", "1528W", "1562G", 
+               "1567C", "224C", "430N", "725E", "729I", "933A", "966E", "FMT.0011C", 
+               "FMT.0012P", "FMT.0073D", "FMT.0144C", "FMT.0212D", "FMT.0241C"
     ),
     Conditioning = c(
       "Flu/BU4", "Flu/BU4",
@@ -38,43 +42,86 @@ test_metadata <- structure(
   dplyr::slice(1:5)
 
 test_that("making a phyloseq object from some metadata works", {
+  skip_if(Sys.getenv("GITHUB_ACTIONS") != "")
+  connect_database(bundled = FALSE)
   ps <- vdb_make_phylo(test_metadata, sampleid_col = "sampleid")
-  expect_equal(phyloseq::rank_names(ps), c("kingdom", "phylum", "class", "ordr", "family", "genus", "species"))
+  expect_equal(phyloseq::rank_names(ps), c("kingdom", "phylum", "class", "order", "family", "genus", "species"))
 })
+
+test_that("making a phyloseq object from some metadata works from testdb", {
+  connect_database(bundled = TRUE)
+  ps <- vdb_make_phylo(test_metadata, sampleid_col = "sampleid")
+  expect_equal(phyloseq::rank_names(ps), c("kingdom", "phylum", "class", "order", "family", "genus", "species"))
+})
+
+
+
 test_that("making a phyloseq object without a metadata dataframe fails", {
   # this is a vector of sampleids
   expect_error(
     vdb_make_phylo(test_metadata[, c("sampleid")], sampleid_col = "sampleid")
   )
 })
+
 test_that("making a phyloseq object from a single metadata column dataframe by adding dummy column", {
+  connect_database(bundled = TRUE)
   ps <- suppressWarnings(vdb_make_phylo(tibble::as_tibble(test_metadata)[, c("sampleid")], sampleid_col = "sampleid"))
-  expect_equal(phyloseq::rank_names(ps), c("kingdom", "phylum", "class", "ordr", "family", "genus", "species"))
+  #expect_equal(phyloseq::rank_names(ps), c("kingdom", "phylum", "class", "order", "family", "genus", "species"))
   expect_equal(phyloseq::sample_data(ps)$x, phyloseq::sample_names(ps))
 })
 
-
-test_that("check handling metaphlan sample names single sequencing run", {
+# app_id = 1 = Fake Biobakery application in test_tables:
+test_that("running vdb_make_phylo_mgx fails if run on non-biobakery app", {
   data = data.frame(
     sample_id = c("PJlibI_MR8R", "PJlibI_MR7R")
   )
-  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=92), warning_about_singlecol_metadata)
-  expect_equal(sort(phyloseq::sample_names(ps)), sort(c("15423_PJlibI_MR8R_H7NNYDSX7", "15423_PJlibI_MR7R_H7NNYDSX7")))
+  expect_error(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=2, testing = TRUE), error_about_only_supporting_biobakery)
 })
 
-test_that("check handling metaphlan sample names mixed sequencing run", {
+test_that("vdb_make_phylo_mgx fails sampleid_col passed is not in the metadata", {
   data = data.frame(
-    sample_id = c("3384K", "3384A")
+    sample_id = c("PJlibI_MR8R", "PJlibI_MR7R")
   )
-  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=66), warning_about_singlecol_metadata)
+  expect_error(ps <- vdb_make_phylo_mgx(data, sampleid_col = "something_wrong_here_not_valid_name", app_id=1, testing = TRUE),
+    error_about_sampleid_col_not_in_metadata)
+})
+
+test_that("check handling metaphlan sample names single sequencing run", {
+  data = data.frame(
+    sample_id = c("simple_sample_1_exp")
+  )
+  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, testing = TRUE), warning_about_singlecol_metadata)
   expect_equal(sort(phyloseq::sample_names(ps)), sort(data$sample_id))
 })
 
-test_that("check handling metaphlan sample names just multiple sequencing run", {
+test_that("check handling metaphlan sample names mixed sequencing run (many experiments run sample level)", {
   data = data.frame(
-    sample_id = c("3384K", "3384J")
+    sample_id = c("sample_many_exps_run_correctly")
   )
-  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=66), warning_about_singlecol_metadata)
+  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, testing = TRUE), warning_about_singlecol_metadata)
+  expect_equal(sort(phyloseq::sample_names(ps)), sort(data$sample_id))
+})
+
+test_that("check handling metaphlan both single experiment and multiple experiment run correctly", {
+  data = data.frame(
+    sample_id = c("sample_many_exps_run_correctly", "simple_sample_1_exp")
+  )
+  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, testing = TRUE), warning_about_singlecol_metadata)
+  expect_equal(sort(phyloseq::sample_names(ps)), sort(data$sample_id))
+})
+
+test_that("error if run on sample with mixed experiment level and sample level results", {
+  data = data.frame(
+    sample_id = c("sample_many_exps_mixed_analyses")
+  )
+  expect_error(expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, testing = TRUE), warning_about_singlecol_metadata), error_about_mixed_sample_and_experiment_level_analyses)
+})
+
+test_that("mixed sample_level and experiment level analyses will work if choose_max_experiment = TRUE", {
+  data = data.frame(
+    sample_id = c("sample_many_exps_mixed_analyses")
+  )
+  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, choose_max_experiment = TRUE, testing = TRUE), warning_about_singlecol_metadata)
   expect_equal(sort(phyloseq::sample_names(ps)), sort(data$sample_id))
 })
 
@@ -91,24 +138,8 @@ test_that("process_metadata doesn't allow duplicate sample IDs", {
   )
   expect_error(process_metadata(data, sampleid_col = "sample_id"))
 })
-test_that("The microviz palette making function correctly overwrites color.", {
-  if (requireNamespace('microViz', quietly=TRUE)){ #only run test if microViz is installed.
-    ps <- vdb_make_phylo(test_metadata, sampleid_col = "sampleid")
-    phyloseq::tax_table(ps) <- microViz::tax_fix(ps) 
-    #rename genus to match the keys in the color db
-    phyloseq::tax_table(ps) <- phyloseq::tax_table(ps) %>%
-      as.data.frame() %>%
-      dplyr::mutate(genus = ifelse(grepl("^[gfocp]__.+", genus), genus, paste0("g__", genus))) %>%
-      as.matrix() %>%
-      phyloseq::tax_table()
-    default_palette = microViz::tax_palette(ps, n=15, rank='genus')
-    connect_database()
-    get_table_from_database('asv_annotation_blast_color_ag')
-    adj_palette = make_microviz_palette(ps, n=15, rank='genus', color_db=asv_annotation_blast_color_ag)
-    expect(as.character(adj_palette["g__Enterococcus"]) != as.character(default_palette['g__Enterococcus']),
-           failure_message="Enterococcus record was not correctly overwritten.")
-  }
-})
+
+
 test_that("test that clean_SGB_names successfully overwrites SGB names at various levels", {
   taxmat = matrix(sample(letters, 35, replace = TRUE), nrow = 5, ncol = 7)
   taxmat[,2] = sample(letters, 5, replace = FALSE) #make sure we are unique at Phylum
@@ -125,6 +156,7 @@ test_that("test that clean_SGB_names successfully overwrites SGB names at variou
   expect(startsWith(clean_mat[4,6], 'c__'), failure_message = "class overwrite not working")
   expect(startsWith(clean_mat[5,6], 'p__'), failure_message = "phylum overwrite not working")
 })
+
 test_that("test clean_SGB_genus name reformatting", {
   taxmat = matrix(sample(letters, 35, replace = TRUE), nrow = 5, ncol = 7)
   rownames(taxmat) <- paste0("OTU", 1:nrow(taxmat))

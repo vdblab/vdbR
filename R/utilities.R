@@ -279,7 +279,13 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
   
   # If testing we will use the test_schema rather than the real "public" schema.
   schema = "public"
-  if (testing){ schema = "test_tables"}
+  if (testing){ 
+    if (class(psql_con)[1] == "SQLiteConnection"){
+      schema = "main"
+    } else{ 
+      schema = "test_tables"
+    }
+  }
 
   # Input checking:
   #------------------------------------------------------------------------------------------------------

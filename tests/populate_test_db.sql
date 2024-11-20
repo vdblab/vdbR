@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS "asv_counts_ag"(
 .mode csv
 .import tests/tmp.colors.csv asv_annotation_blast_color_ag
 .import tests/tmp.anno.csv asv_annotation_blast_ag
-.import tests/tmp.samples.csv samples
+.import tests/tmp.samples.csv frozen_set_ag
 .import tests/tmp.counts.csv asv_counts_ag
 
 

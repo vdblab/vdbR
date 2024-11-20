@@ -16,8 +16,8 @@ asv_annotation_blast_ag %>% filter(asv_key %in% counts$asv_key) %>%  write.csv("
 asv_annotation_blast_color_ag %>% filter(asv_key %in%counts$asv_key) %>% dplyr::select(-key, -uploaded_date) %>% write.csv("tests/tmp.colors.csv",  row.names = FALSE)
 
 
-if(file.exists( "tests/db.sqlite")) system("rm  tests/db.sqlite")
-system("sqlite3 tests/db.sqlite < tests/populate_test_db.sql ")
+if(file.exists( "inst/extdata/db.sqlite")) system("rm  inst/extdata/db.sqlite")
+system("sqlite3 inst/extdata/db.sqlite < tests/populate_test_db.sql ")
 
 # test with
 # psql_con = DBI::dbConnect(RSQLite::SQLite(), "tests/db.sqlite")

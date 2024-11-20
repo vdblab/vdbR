@@ -101,7 +101,7 @@ make_microviz_palette <- function(phy_seq_obj, n, rank){
   taxonomy <- phy_seq_obj %>%
     phyloseq::tax_table() %>%
     as.data.frame() %>%
-    dplyr::select(1:index_rank) %>%
+    dplyr::select(1:all_of(index_rank)) %>%
     dplyr::filter(.[[index_rank]] %in% names(my_palette)) %>%
     unique()
 
