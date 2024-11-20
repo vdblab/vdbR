@@ -1,6 +1,6 @@
 Package: vdbR
 Title: A Package for Acessing and Processing Microbiome Data. 
-Version: 0.6.2
+Version: 0.7.0
 Authors@R: 
     c(person(given = "Antonio",
            family = "Gomes",
