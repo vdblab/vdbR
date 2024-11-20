@@ -40,7 +40,6 @@ MB_H001440_MC05	PF53_GutZymo	MOCK_CONTROL
 MB_H001440_MC04	PC26_GutZymo	MOCK_CONTROL
 MB_H001440_MC03	GutZymo	MOCK_CONTROL
 MB_H001440_NC01	GutZymo_28	MOCK_CONTROL
-MB_H001440_MC02	GutZymo1	MOCK_CONTROL
 MB_H001440_MC01	Zymo	MOCK_CONTROL
 MB_H001440_N02	zymostandard2	MOCK_CONTROL
 MB_H001440_N01	zymostandard1	MOCK_CONTROL", sep="\t", )
@@ -64,7 +63,7 @@ zymo_preprocess_analyses <- get_isabl_analyses(sampleids = metadata$SampleID, ap
 Now, we can use the Isabl analysis ID `ia_id` to collect the qc data from the database:
 ```{r}
 get_table_from_database("mgx_qc")
-zymo_qc <- mgx_qc %>% filter(ia_id %in% zymo_preprocess_analyses$ia_id)
+zymo_qc <- mgx_qc %>% filter(ia_id %in% zymo_preprocess_analyses$id)
 ggplot(zymo_qc, aes(x=1-(nreads_deduplicated/nreads_raw), y=as.character(ia_id))) + geom_point()
 
 ```
@@ -79,7 +78,6 @@ Application ID `66` corresponds to the most recent version of the biobakery app 
 
 Now that we have our sampleids and our application id, we can now pull the metaphlan results. Metaphlan reports relative abundances as a percent, and  an optional output for reads attributed to a certain clade.  Because many of the phyloseq functions expect counts rather than a percentage, we can transform to counts per million
 
->We should proabably make this an argument to vdb_make_phylo_mgx, allowing users to use either relative abundances or attributed counts data type.
 
 ```{r}
 phymgx <- vdb_make_phylo_mgx(metadata, sampleid_col = "SampleID", app_id = 66) %>% 

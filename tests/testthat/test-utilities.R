@@ -125,6 +125,19 @@ test_that("mixed sample_level and experiment level analyses will work if choose_
   expect_equal(sort(phyloseq::sample_names(ps)), sort(data$sample_id))
 })
 
+
+test_that("real data mixed sample_level and experiment level analyses will work if choose_max_experiment = TRUE", {
+  data = data.frame(
+    sample_id = c("PJlibH_GutZymo", "GutZymoDiet", "GUTZYMO.1177", "MMF_hc_E_GutZymo", 
+                  "QM154_GutZymo", "ZB132_GutZymo", "PF53_GutZymo", "PC26_GutZymo", 
+                  "GutZymo", "GutZymo_28", "Zymo", "zymostandard2", "zymostandard1"
+    )
+  )
+  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=66, choose_max_experiment = TRUE, testing = FALSE), warning_about_singlecol_metadata)
+  expect_equal(sort(phyloseq::sample_names(ps)), sort(data$sample_id))
+})
+
+
 test_that("process_metadata doesn't allow NAs", {
   data = data.frame(
     sample_id = c("3384K", "3384J", NA)
