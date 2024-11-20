@@ -4,7 +4,7 @@ error_about_sampleid_col_not_in_metadata <- "sampleid_col not in colnames of met
 error_about_mixed_sample_and_experiment_level_analyses <- paste0("The same experiments are in multiple analyses. ", 
         "This can happen when someone runs an app both per-sample and per-experiment. ",
         "Resolve this in Isabl to avoid confusion, or rerun this code with ",
-        "choose_max_experiment = True")
+        "choose_max_experiment = TRUE")
 test_metadata <- structure(
   list(
     sampleid=c("1143N", "1252XX", "1303G", "1379N", "142E", "1528W", "1562G", 
@@ -127,6 +127,8 @@ test_that("mixed sample_level and experiment level analyses will work if choose_
 
 
 test_that("real data mixed sample_level and experiment level analyses will work if choose_max_experiment = TRUE", {
+  skip_if(Sys.getenv("GITHUB_ACTIONS") != "")
+  connect_database()
   data = data.frame(
     sample_id = c("PJlibH_GutZymo", "GutZymoDiet", "GUTZYMO.1177", "MMF_hc_E_GutZymo", 
                   "QM154_GutZymo", "ZB132_GutZymo", "PF53_GutZymo", "PC26_GutZymo", 

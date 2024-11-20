@@ -1,5 +1,5 @@
 Package: vdbR
-Title: A Package for Acessing and Processing Microbiome Data
+Title: A Package for Acessing and Processing Microbiome Data. 
 Version: 0.6.2
 Authors@R: 
     c(person(given = "Antonio",
@@ -11,7 +11,7 @@ Authors@R:
            family = "Dai",
            role = c("aut"),
            email = "daia1@mskcc.org",
-           comment = c(ORCID = "")),
+           comment = c(ORCID = "0000-0003-3106-4624")),
     person(given = "Chi",
            family = "Nguyen",
            role = c("aut"),
@@ -21,13 +21,19 @@ Authors@R:
            family = "Kousa",
            role = c("aut"),
            email = "kousaa@mskcc.org",
-           comment = c(ORCID = "")),
+           comment = c(ORCID = "0000-0002-4550-0389")),
     person(given = "Nick",
            family = "Waters",
            role = c("aut"),
            email = "watersn@mskcc.org",
-           comment = c(ORCID = "")))
-Description: What the package does (one paragraph).
+           comment = c(ORCID = "0000-0002-9035-2143")),
+    person(given = "Mirae",
+           family = "Baichoo",
+           role = c("aut"),
+           email = "baichom1@mskcc.org",
+           comment = c(ORCID = "0000-0002-4219-9076"))
+           )
+Description: Utility functions for dealing with microbiome data
 License: MIT + file LICENSE
 Encoding: UTF-8
 biocViews: 
@@ -50,6 +56,9 @@ RoxygenNote: 7.3.1
 Suggests: 
     knitr,
     rmarkdown,
+    ggplot2,
+    RSQLite,
+    microViz,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

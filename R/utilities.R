@@ -361,7 +361,7 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
       stop(paste0("The same experiments are in multiple analyses. ", 
         "This can happen when someone runs an app both per-sample and per-experiment. ",
         "Resolve this in Isabl to avoid confusion, or rerun this code with ",
-        "choose_max_experiment = TRUE.  The problem samples are above.",
+        "choose_max_experiment = TRUE.  The problem samples are above."
         ))
     }
   }
@@ -383,7 +383,6 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
   #------------------------------------------------------------------------------------------------------
   if (verbose) print("creating otu table")
   ot <- phyloseq::otu_table(results %>% tibble::column_to_rownames("clade_name"), taxa_are_rows = TRUE)
-  print(ot)
   tax_tab <- dplyr::bind_rows(lapply(gsub("\\|", ";", rownames(ot)), phyloseq::parse_taxonomy_qiime)) %>% as.matrix()
   rownames(tax_tab) <- rownames(ot)
 
@@ -392,7 +391,7 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
     dplyr::select(-c(experiment_id, experiment_identifier)) %>%
     unique()
   
-  samp <- metadata %>% dplyr::rename(sample_identifier = all_of(sampleid_col)) %>%
+  samp <- metadata %>% dplyr::rename(sample_identifier = dplyr::all_of(sampleid_col)) %>%
     dplyr::full_join(abbreviated_md, by = dplyr::join_by(sample_identifier)) %>%
     tibble::column_to_rownames("sample_identifier") 
   if (any(is.na(samp$analysis_id))){

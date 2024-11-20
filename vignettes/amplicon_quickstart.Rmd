@@ -2,7 +2,7 @@
 title: "Quickstart"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{quickstart}
+  %\VignetteIndexEntry{Quickstart}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -18,7 +18,8 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(vdbR)
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
 library(speedyseq)
 library(microViz)
 theme_set(theme_classic())
@@ -27,7 +28,6 @@ theme_set(theme_classic())
 DEBUG = FALSE
 connect_database(bundled=Sys.getenv("GITHUB_ACTIONS") != "")
 get_table_from_database("frozen_set_ag")
-get_table_from_database("asv_annotation_blast_color_ag")
 
 
 ```
@@ -54,7 +54,7 @@ The MicroVis takes a lot of the annoying considerations out of building the clas
 ```{r}
 tax_table(phy_amplicon) <- clean_refseq_genus(phy_amplicon)
 
-mypal <- make_microviz_palette(phy_amplicon, n=30, rank="genus", color_db=asv_annotation_blast_color_ag) 
+mypal <- make_microviz_palette(phy_amplicon, n=30, rank="genus") 
 phy_amplicon %>%
   comp_barplot(tax_level = "genus", palette = mypal, n_taxa=30 ) +
   facet_grid( ~institution, scales = "free", space = "free") + 

@@ -2,7 +2,7 @@
 title: "Metagenomic Quickstart"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{mgx-quickstart}
+  %\VignetteIndexEntry{Metagenomic Quickstart}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -18,7 +18,8 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(vdbR)
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
 library(speedyseq)
 library(microViz)
 theme_set(theme_classic())
@@ -110,8 +111,7 @@ phymgx_genus <- phymgx %>%
 
 The microViz takes a lot of the annoying considerations out of building the classic stacked bar plots.
 ```{r}
-get_table_from_database("asv_annotation_blast_color_ag")
-yt_et_al_pal <-  make_microviz_palette(phymgx_genus, n=20, rank='genus', color_db=asv_annotation_blast_color_ag)
+yt_et_al_pal <-  make_microviz_palette(phymgx_genus, n=20, rank='genus')
 
 phymgx_genus %>%
   microViz::tax_fix() %>% 
