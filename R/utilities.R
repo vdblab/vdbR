@@ -403,9 +403,13 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
     samp <- samp %>% dplyr::filter(!is.na(analysis_id))
   }
   
-  sample_names_df  <- data.frame(sample_names = phyloseq::sample_names(ot)) %>% 
-    dplyr::left_join(isabl_res[[2]] %>% dplyr::mutate(id = as.character(id)), by=c("sample_names" = "id"))
-  phyloseq::sample_names(ot) = sample_names_df$identifier
+  sample_names_df  <- db_all_joined %>%
+    dplyr::mutate(analysis_id = as.character(analysis_id)) %>%
+    dplyr::select(c(analysis_id, sample_identifier)) %>%
+    unique() %>%
+    dplyr::right_join(data.frame(analysis_ids = phyloseq::sample_names(ot)), by=c("analysis_id" = "analysis_ids"))
+
+  phyloseq::sample_names(ot) = sample_names_df$sample_identifier
 
   if (verbose) print("contructing phyloseq object")
   return(phyloseq::phyloseq(ot, phyloseq::tax_table(tax_tab), phyloseq::sample_data(samp)))
