@@ -40,7 +40,7 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
       - name: igraph-deps
-        run: sudo apt-get install -y libglpk40`
+        run: sudo apt-get install -y libglpk40
       - uses: r-lib/actions/setup-renv@v2
         with:
           extra-packages: any::rcmdcheck

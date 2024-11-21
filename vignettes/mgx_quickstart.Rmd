@@ -22,7 +22,11 @@ library(dplyr)
 library(ggplot2)
 library(microViz)
 theme_set(theme_classic())
-connect_database()
+
+# dont try to build during github actions
+if (Sys.getenv("GITHUB_ACTIONS") != ""){
+  knitr::opts_chunk$set(eval = FALSE)
+}
 
 ```
 
