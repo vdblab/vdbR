@@ -41,6 +41,11 @@ jobs:
           use-public-rspm: true
       - name: igraph-deps
         run: sudo apt-get install -y libglpk40
+     - name: Install rcmdcheck
+        run: |
+          install.packages(c("rcmdcheck", "BiocCheck"), repos = BiocManager::repositories())
+        continue-on-error: true
+        shell: Rscript {0}        
       - uses: r-lib/actions/setup-renv@v2
         with:
           extra-packages: any::rcmdcheck

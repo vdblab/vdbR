@@ -72,8 +72,8 @@ plot_ordination(phy_amplicon, ord, color="institution")
 ```
 
 ```{r}
-tsne <- make_tsne(dists) %>% 
-  left_join(as_tibble(sample_data(phy_amplicon)) %>% rename(sampleid = .sample))
+tsne <- make_tsne(dists, perplexity = 10) %>% 
+  left_join(data.frame(sample_data(phy_amplicon)) %>% tibble::rownames_to_column("sampleid"))
 
 ggplot(tsne, aes(t1_scaled, t2_scaled, color = institution)) +
   geom_point() 
