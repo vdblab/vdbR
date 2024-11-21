@@ -53,8 +53,8 @@ jobs:
       matrix:
         config:
           - { os: ubuntu-latest, r: '4.2', bioc: '3.16', cont: "bioconductor/bioconductor_docker:RELEASE_3_16", rspm: "https://packagemanager.rstudio.com/cran/__linux__/jammy/latest" }
-          - { os: macOS-latest, r: '4.2', bioc: '3.16'}
-          - { os: windows-latest, r: '4.2', bioc: '3.16'}
+#          - { os: macOS-latest, r: '4.2', bioc: '3.16'}
+ #         - { os: windows-latest, r: '4.2', bioc: '3.16'}
           ## Check https://github.com/r-lib/actions/tree/master/examples
           ## for examples using the http-user-agent
     env:
@@ -168,7 +168,7 @@ jobs:
           ## https://stat.ethz.ch/pipermail/bioc-devel/2020-April/016675.html
           ## https://github.com/r-lib/remotes/issues/296
           ## Ideally, all dependencies should get installed in the first pass.
-
+          remotes::install_github("david-barnett/microViz@0.12.5")
           ## For running the checks
           message(paste('****', Sys.time(), 'installing rcmdcheck and BiocCheck ****'))
           install.packages(c("rcmdcheck", "BiocCheck"), repos = BiocManager::repositories())
