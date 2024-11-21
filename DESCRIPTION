@@ -1,5 +1,5 @@
 Package: vdbR
-Title: A Package for Acessing and Processing Microbiome Data. 
+Title: A Package for Acessing and Processing Microbiome Data
 Version: 0.7.0
 Authors@R: 
     c(person(given = "Antonio",
@@ -33,14 +33,13 @@ Authors@R:
            email = "baichom1@mskcc.org",
            comment = c(ORCID = "0000-0002-4219-9076"))
            )
-Description: Utility functions for dealing with microbiome data
+Description: Utility functions for dealing with microbiome data.  
 License: MIT + file LICENSE
 Encoding: UTF-8
 biocViews: 
 Depends: 
     R (>= 3.5.0),
 Imports: 
-    dbplyr,
     dplyr,
     data.table,
     tibble,
@@ -58,6 +57,9 @@ Suggests:
     rmarkdown,
     ggplot2,
     RSQLite,
+    labdsv,
+    Rtsne,
+    ape,
     microViz,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

@@ -24,17 +24,17 @@
 #' @examples
 #' # We show how to compute a tsne map with 100 samples from
 #' # frozen_set_ag based on the beta-diversity at genus level
-#' get_table_from_database("frozen_set_ag"); #getting samples from frozen set asv_counts_subset = get_counts_subset( frozen_set_ag$sampleid[1:100])
+#' # getting samples from frozen set
+#' connect_database(bundled=TRUE)
+#' get_table_from_database("frozen_set_ag") 
+#' asv_counts_subset = get_counts_subset( frozen_set_ag$sampleid[1:100])
 #' get_table_from_database("asv_annotation_blast_ag"); #getting annotation
 #' m = merge(asv_counts_subset[,.(asv_key,sampleid,count)],asv_annotation_blast_ag[,.(asv_key,genus)])
 #' cbd = compute_beta_diversity_and_tsne(m$sampleid, m$genus, m$count)
 #' cbd$compute_beta_diversity();
-#' cbd$compute_tsne()
+#' cbd$compute_tsne(perplexity = 2, max_iter = 500)
 #' data_set_tsne = cbd$get_tsne();
 #'
-# library("Rtsne");
-# library("labdsv");
-# library(ape); #For biplot function
 compute_beta_diversity_and_tsne <- function(sampleid, taxonomy, count) {
   if (!requireNamespace("labdsv", quietly = TRUE)) {
     warning("The labdsv package must be installed to use this functionality")
@@ -294,9 +294,12 @@ f_scale_interval <- function(x, interval = c(-1, 1)) {
 
 
 #' This function helps you to compute beta-diversity, tsne and PCA plots
-#'
 #' @param dists distance matrix from the phyloseq/vegan::distance function
-#' @export
+#' @param perplexity rtsne's perplexity argument
+#' @param max_iter rtsne's max_iter argument
+#' @param theta rtsne's theta argument
+#' @param seed rtsne's seed argument
+#' @export 
 #' @name make_tsne
 make_tsne <-  function(dists, perplexity = 20, max_iter = 3000, theta = 0.1, seed = 1){
   if (!requireNamespace("Rtsne", quietly = TRUE)) {

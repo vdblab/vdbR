@@ -58,6 +58,8 @@ check_config_location <- function(config_file) {
 #' connect_database
 #' @name connect_database
 #' @import data.table
+#' @importFrom utils write.table
+#' @importFrom RPostgres Postgres
 #' @param config_file file with login info to connect to database
 #' @param bundled conected to test sqlite database
 #' @export

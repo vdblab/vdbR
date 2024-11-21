@@ -22,11 +22,12 @@ norm_generate_component <- function(rgb_component, magnitude = 7){
 }
 
 #' This function will generate a color close to the original color provided
-#' 
+#' @importFrom grDevices col2rgb rgb
 #' @param color color to randomly adjust (as hex color)
 #' @export
 #' @name blur_color
 blur_color <- function(color){
+  set.seed(123)
   rgb_comps <- col2rgb(color)
   return(rgb(
     norm_generate_component(rgb_comps[1]), 
@@ -49,7 +50,7 @@ blur_color <- function(color){
 #' @name rename_taxa_colors
 rename_taxa_colors <- function(palette, full_taxonomy, rank){
   color_group_tax_info = data.frame(group = names(base_colors)) %>%
-    dplyr::mutate(tax_level = stringr::str_split(group, "__", simplify = T)[, 1])
+    dplyr::mutate(tax_level = gsub("(.*)__.*", "\\1", group))
   inds_to_adjust = rep(FALSE, length(palette))
   new_palette = unname(palette)
   t_names = names(palette)
@@ -57,7 +58,7 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank){
     ind_cur_tax_level = which(color_group_tax_info[,"tax_level"] == taxa_order[tax_level])
     annotation_level_cur = full_taxonomy[tax_level]
     for(i_tax_cur in ind_cur_tax_level ){
-      new_palette[inds_to_adjust] <- purrr::map(new_palette[inds_to_adjust], blur_color)
+      new_palette[inds_to_adjust] <- lapply(new_palette[inds_to_adjust], blur_color)
       matching_taxonomy = annotation_level_cur == color_group_tax_info[i_tax_cur,"group"]
       new_palette[matching_taxonomy] <- base_colors[color_group_tax_info[i_tax_cur,"group"]]
       inds_to_adjust = apply(matrix(c(inds_to_adjust, matching_taxonomy), 2), 2, any) #update the inds to adjust vector by adding in those modified at this level

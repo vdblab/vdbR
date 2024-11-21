@@ -1,7 +1,8 @@
 #' Ensure that metadata is a dataframe without NA sampleid or duplicated sampleids.
-#' cast metadata to dataframe so we can do convenient indexing with metadata[1, samplid_col]
+#' cast metadata to dataframe so we can do convenient indexing 
 #'
 #' @param metadata metadata dataframe
+#' @param sampleid_col name of column in metadata containing sample_ids 
 #' @name process_metadata
 #'
 process_metadata <- function(metadata, sampleid_col){
@@ -98,8 +99,7 @@ clean_refseq_genus <- function(phy_seq_obj){
 #' @examples
 #' mrns <- c(1, "42")
 #' padMRN(mrns)
-#' [1] "00000001" "00000042"
-#'
+#' #  "00000001" "00000042"
 #'
 padMRN <- base::Vectorize(USE.NAMES = FALSE, function(mrn) {
   if (is.character(mrn)) {
@@ -123,15 +123,13 @@ padMRN <- base::Vectorize(USE.NAMES = FALSE, function(mrn) {
 #' @export
 #' @name vdb_make_phylo
 #' @examples
-#' # assuming test_metadata is a dataframe with a column containing sample IDs called samplid
+#' \dontrun{
 #' vdb_make_phylo(test_metadata, sampleid_col = "sampleid")
-#'
-#'
-
+#' }
 vdb_make_phylo <- function(metadata, sampleid_col = "sampleid", skip_seqs = TRUE) {
   if (!is.data.frame(metadata)) stop("metadata must be a data.frame")
   metadata <- process_metadata(metadata, sampleid_col)
-  #' Make a phyloseq object from some metadata with sampleids
+  # Make a phyloseq object from some metadata with sampleids
   # TODO add a phylogeny
   assert_db_connected()
   print("getting counts")
@@ -199,14 +197,18 @@ get_metaphlan_analyses <- function(con, analysis_ids, schema="public") {
 #' Given sample-ids - get the associated experiments and analyses associated with those experiments (optionally filtering by project or app_id)
 #'
 #' @param sample_ids list of sample ids
-#' @param verbose output additional logging information (defualt = F)
+#' @param verbose output additional logging information (default = F)
 #' @param app_id isabl app identifier (optional)
-#' @param proj_id projects to filter by (optional)
+#' @param proj_id isabl project to filter by
+#' @param schema name of schema to query; public for production tables, test_tables for dev, and main when using sqlitedb
 #' @name get_sample_isabl_info
+#' @export
 #' @examples
 #' # assuming test_metadata is a dataframe with a column containing sample IDs called samplid
+#' \dontrun{
 #' get_sample_isabl_info(list(db[, sample_id_col]), app_id = 66)
-get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=NA, schema = "public", psql_con=NULL){
+#' }
+get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=NA, schema = "public"){
   assert_db_connected()
   db_samples <- get_subset_pg_df("isabl_api_sample", "identifier", sample_ids, schema = schema)
   if (verbose) print(paste("Identified ", nrow(db_samples), "samples of the ", length(sample_ids), " samples requested"))
@@ -253,12 +255,16 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
 #'
 #' @param sampleids vector of sample identifiers
 #' @param app_id isabl app identifier
+#' @param proj_id isabl project to filter by
 #' @export
 #' @name get_isabl_analyses
 #' @examples
-#'  sampleids <- c("2711D", "2711E", "2711F", "2711G", "2711H", "2711I", "2954A", 
+#' \dontrun{
+#' connect_database()
+#' sampleids <- c("2711D", "2711E", "2711F", "2711G", "2711H", "2711I", "2954A", 
 #'               "2954B", "2954C", "2954D", "3384D", "3384E", "3384F", "3384H")
 #'  get_isabl_analyses(sampleids = sampleids, app_id=43)
+#'  }
 get_isabl_analyses <- function(sampleids, app_id=NA, proj_id=NA){
   res <- get_sample_isabl_info(sample_ids=sampleids, app_id=app_id, proj_id=proj_id)
   return(res[[4]])
@@ -270,11 +276,15 @@ get_isabl_analyses <- function(sampleids, app_id=NA, proj_id=NA){
 #' @param sampleid_col name of the column containing sampleids
 #' @param app_id isabl app identifier
 #' @param verbose output additional logging information
-#' @export
+#' @param choose_max_experiment if multiple analyses are found, select the one utilixing the most experiemnts
+#' @param testing use test tables if TRUE
 #' @name vdb_make_phylo_mgx
+#' @export
 #' @examples
 #' # assuming test_metadata is a dataframe with a column containing sample IDs called samplid
+#' \dontrun{
 #' vdb_make_phylo_mgx(test_metadata, sampleid_col = "sampleid")
+#' }
 vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66, verbose = FALSE, choose_max_experiment = FALSE, testing = FALSE) {
   
   # If testing we will use the test_schema rather than the real "public" schema.
@@ -421,6 +431,8 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
 #' @param table_id_name the name of the id in the table to perform filtering with.  
 #' @param ids list of strings: ids to use in the query
 #' @param con - the postgres connection object, defaults to psql_con
+#' @param schema name of schema to query; public for production tables, test_tables for dev
+
 #' @export
 #' @name get_subset_pg_df
 get_subset_pg_df <- function(table_name, table_id_name, ids, con = NA, schema = "public") {
@@ -439,14 +451,16 @@ get_subset_pg_df <- function(table_name, table_id_name, ids, con = NA, schema = 
 #' filtering by those samples which have successful analyses run through a particular 
 #' application number. 
 #'
-#' @param project_num the project number to fetch analysis ids for
+#' @param project the project number to fetch analysis ids for
 #' @param app_id the number of the application to check samples have a successful analysis for. 
 #' @param verbose if messages should be printed about what is being run/found. 
 #' @export
-#' @name get_project_analyses
+#' @name get_project_samples
 #' @examples
 #' # ie to get all the Human Biobakery results for project 32: 
-#' ia_ids = get_project_analyses(project = 32, application = 66, verbose = T)
+#' \dontrun{
+#' ia_ids = get_project_samples(project = 32, app_id = 66, verbose = T)
+#' }
 get_project_samples <- function(project, app_id = NA, verbose = FALSE) {
   assert_db_connected()
   exp_query = paste0("SELECT * FROM isabl_api_experiments_projects WHERE project_id in (", project, ")")
