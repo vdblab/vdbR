@@ -20,7 +20,6 @@ knitr::opts_chunk$set(
 library(vdbR)
 library(dplyr)
 library(ggplot2)
-library(speedyseq)
 library(microViz)
 theme_set(theme_classic())
 connect_database()
@@ -82,7 +81,7 @@ Now that we have our sampleids and our application id, we can now pull the metap
 
 ```{r}
 phymgx <- vdb_make_phylo_mgx(metadata, sampleid_col = "SampleID", app_id = 66) %>% 
-  speedyseq::transform_sample_counts(fun = function(x) round(x*1e6, 0))
+  phyloseq::transform_sample_counts(fun = function(x) round(x*1e6, 0))
 phymgx
 
 ```

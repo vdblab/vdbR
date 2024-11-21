@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 library(vdbR)
 library(dplyr)
 library(ggplot2)
-library(speedyseq)
+library(phyloseq)
 library(microViz)
 theme_set(theme_classic())
 
