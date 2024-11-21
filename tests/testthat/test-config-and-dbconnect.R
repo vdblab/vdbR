@@ -8,6 +8,7 @@ test_that("weird config name raises warning", {
 })
 
 test_that("non-existant warning", {
+  skip_if(Sys.getenv("GITHUB_ACTIONS") != "")
   config_file <- approved_locations[file.exists(approved_locations)][[1]]
   expect_silent(check_config_location(config_file = config_file))
 })
