@@ -80,7 +80,10 @@ connect_database <- function(config_file, bundled=FALSE) {
   config_file <- check_config_location(config_file = config_file)
 
   config <- data.table::fread(config_file, nrows = 1)
-
+  required_fields <- c("user", "pass", "host", "dbname")
+  if (!all(sapply(required_fields, function(x) { x %in% attributes(config)$names}))){
+    stop(cat("\nYour config file: ", config_file, " is missing one or more required attributes:\n\n", required_fields, "\n\n Please edit and retry!\n "))
+  }
   drv <- RPostgres::Postgres()
 
   # loads the PostgreSQL driver
