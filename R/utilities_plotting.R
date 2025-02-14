@@ -69,7 +69,7 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank){
   
   #This will swap around the order of the names so that groups of related genera are together in the palette:
   ordered_palette <- data.frame(
-    color = list_c(new_palette),
+    color = unlist(new_palette),
     name = full_taxonomy[rank][[1]],
     full_tax = rownames(full_taxonomy)
   ) %>% left_join(data.frame(
