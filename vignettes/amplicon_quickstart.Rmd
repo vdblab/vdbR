@@ -35,6 +35,7 @@ get_table_from_database("frozen_set_ag")
 Lets start by getting some metadata. For simplicity we will pull a frozen set, but in practice it could be any dataframe containing sampleids. We will use phyloseq's `tax_glom` to aggregate the data at the genus level.
 
 ```{r}
+set.seed(123)
 phy_amplicon <- vdb_make_phylo(frozen_set_ag %>% dplyr::sample_n(50)) %>% 
   phyloseq::tax_glom("genus")  %>% 
   microViz::tax_fix()

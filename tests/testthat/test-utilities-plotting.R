@@ -45,7 +45,7 @@ test_metadata <- structure(
 
 
 test_that("The microviz palette making function correctly overwrites color.", {
-  #only run test if microViz is installed. and on-prep
+  #only run test if microViz is installed. and on-prem
   skip_if(Sys.getenv("GITHUB_ACTION") != "")
   if (requireNamespace('microViz', quietly=TRUE) ){ 
     connect_database()
