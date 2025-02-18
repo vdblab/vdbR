@@ -13,7 +13,7 @@ taxa_order = c(kingdom = "k", phylum="p", class="c", order="o", family="f", genu
 #' This function will generate a color close to the original color comp provided
 #' 
 #' @param rgb_component the component to randomly adjust
-#' @param magnitude the maximum amount to adjust rgb component by (default 4)
+#' @param magnitude the maximum amount to adjust rgb component by (default 15)
 #' @export
 #' @name norm_generate_component
 norm_generate_component <- function(rgb_component, magnitude = 15){
