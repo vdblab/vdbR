@@ -4,7 +4,7 @@
 \alias{norm_generate_component}
 \title{This function will generate a color close to the original color comp provided}
 \usage{
-norm_generate_component(rgb_component, magnitude = 7)
+norm_generate_component(rgb_component, magnitude = 15)
 }
 \arguments{
 \item{rgb_component}{the component to randomly adjust}

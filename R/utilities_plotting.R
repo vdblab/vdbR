@@ -72,11 +72,11 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank){
     color = unlist(new_palette),
     name = full_taxonomy[rank][[1]],
     full_tax = rownames(full_taxonomy)
-  ) %>% left_join(data.frame(
+  ) %>% dplyr::left_join(data.frame(
     full_tax = shuffled_names,
     order_index = seq(1, length(palette))
   )) %>%
-    arrange(order_index)
+    dplyr::arrange(order_index)
   
   # Make the new palette and add in the "other" color:
   new_palette <- ordered_palette$color
