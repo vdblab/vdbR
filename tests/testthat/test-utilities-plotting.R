@@ -44,7 +44,7 @@ test_metadata <- structure(
   dplyr::slice(1:5)
 
 
-test_that("The microviz palette making function correctly overwrites color.", {
+test_that("The microviz palette making function correctly changes genera that should be changed.", {
   #only run test if microViz is installed. and on-prem
   skip_if(Sys.getenv("GITHUB_ACTION") != "")
   if (requireNamespace('microViz', quietly=TRUE) ){ 
@@ -64,4 +64,29 @@ test_that("The microviz palette making function correctly overwrites color.", {
   }
 })
 
+
+test_that("The microviz palette looks similar to previous palette.", {
+  #only run test if microViz is installed. and on-prem
+  skip_if(Sys.getenv("GITHUB_ACTION") != "")
+  if (requireNamespace('microViz', quietly=TRUE) ){ 
+    connect_database()
+    data = data.frame(
+      sample_id = c("sample_many_exps_mixed_analyses")
+    )
+    expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, choose_max_experiment = TRUE, testing = TRUE) %>%
+      tax_fix() %>%
+      transform_sample_counts(function(x) round(x*1000000, 0) ))
+    
+    phyloseq::tax_table(ps) <- clean_SGB_genus(ps)
+    n_taxa = 15
+    rank = "genus"
+    
+    set.seed(123)
+    test_palette <- make_microviz_palette(ps, n_taxa, rank)
+    expected_palette <- readRDS("palette_for_testthat.rds")
+    expect_equal(names(test_palette), names(expected_palette))
+    genera = names(test_palette)
+    expect_equal(test_palette[genera], expected_palette[genera])
+  }
+})
 
