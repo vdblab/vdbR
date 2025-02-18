@@ -9,7 +9,7 @@ norm_generate_component(rgb_component, magnitude = 15)
 \arguments{
 \item{rgb_component}{the component to randomly adjust}
 
-\item{magnitude}{the maximum amount to adjust rgb component by (default 4)}
+\item{magnitude}{the maximum amount to adjust rgb component by (default 15)}
 }
 \description{
 This function will generate a color close to the original color comp provided

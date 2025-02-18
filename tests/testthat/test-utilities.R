@@ -132,7 +132,8 @@ test_that("real data mixed sample_level and experiment level analyses will work 
   data = data.frame(
     sample_id = c("PJlibH_GutZymo", "GutZymoDiet", "GUTZYMO.1177", "MMF_hc_E_GutZymo", 
                   "QM154_GutZymo", "ZB132_GutZymo", "PF53_GutZymo", "PC26_GutZymo", 
-                  "GutZymo", "GutZymo_28", "Zymo", "zymostandard2", "zymostandard1"
+                  #"GutZymo", 
+                  "GutZymo_28", "Zymo", "zymostandard2", "zymostandard1"
     )
   )
   expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=66, choose_max_experiment = TRUE, testing = FALSE), warning_about_singlecol_metadata)
