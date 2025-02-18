@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 library(vdbR)
 library(dplyr)
 library(ggplot2)
+library(phyloseq)
 library(microViz)
 theme_set(theme_classic())
 
@@ -42,15 +43,16 @@ MB_H001440_MC07	QM154_GutZymo	MOCK_CONTROL
 MB_H001440_MC06	ZB132_GutZymo	MOCK_CONTROL
 MB_H001440_MC05	PF53_GutZymo	MOCK_CONTROL
 MB_H001440_MC04	PC26_GutZymo	MOCK_CONTROL
-MB_H001440_MC03	GutZymo	MOCK_CONTROL
+#MB_H001440_MC03	GutZymo	MOCK_CONTROL
 MB_H001440_NC01	GutZymo_28	MOCK_CONTROL
 MB_H001440_MC01	Zymo	MOCK_CONTROL
 MB_H001440_N02	zymostandard2	MOCK_CONTROL
 MB_H001440_N01	zymostandard1	MOCK_CONTROL", sep="\t", )
 ```
 
-Samples in isabl are associated with sequncing runs called "experiments", and these experiments are processed with "applications".  Lets get a look at all the available applications:
+Samples in isabl are associated with sequencing runs called "experiments", and these experiments are processed with "applications".  Lets get a look at all the available applications:
 ```{r}
+connect_database()
 apps <- tbl(psql_con, "isabl_api_application") %>% collect()
 ```
 
