@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(vdbR)
+#library(vdbR)
 library(dplyr)
 library(ggplot2)
 library(phyloseq)
