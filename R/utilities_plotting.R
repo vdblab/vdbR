@@ -1,13 +1,3 @@
-# Currently this is just hard coded, ideally would read in from postgres:
-base_colors = c(other="#BBBBBB",
-                p__Actinobacteria = "#A77097", p__Bacteroidetes = "#51AB9B", p__Proteobacteria = "#AB3535", # "#FF0000". Ying had used full red spectrum. I used DD0000 to increase spectrum.
-                o__Clostridiales = "#9C854E",
-                o__Erysipelotrichales = "#7A6920", #o__Erysipelotrichales = "#ACA54D", #Erysipelotrichales order has been added mainly due to high frequency of genus: Erysipelatoclostridium.
-                f__Lachnospiraceae = "#EC9B96", f__Ruminococcaceae = "#FF7106" ,#"#9AAE73",
-                g__Enterococcus = "#129246", g__Lactobacillus = "#3B51A3", g__Staphylococcus = "#F1EB25", g__Streptococcus = "#9FB846",
-                g__Escherichia = "#800026", g__Klebsiella = "#FF2211",
-                g__Akkermansia = "#377EB8");
-
 taxa_order = c(kingdom = "k", phylum="p", class="c", order="o", family="f", genus="g")
 
 #' This function will generate a color close to the original color comp provided
@@ -48,7 +38,7 @@ blur_color <- function(color){
 #' @param base_palette the base palette to use to generate taxonomy specific colors (named)
 #' @export
 #' @name rename_taxa_colors
-rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette){
+rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, dont_shuf_genus=T){
   color_group_tax_info = data.frame(group = names(base_palette)) %>%
     dplyr::mutate(tax_level = gsub("(.*)__.*", "\\1", group))
   inds_to_adjust = rep(FALSE, length(palette))
@@ -65,7 +55,9 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette){
         new_palette[which(full_taxonomy[tax_level] == clade)] <- base_palette[clade]
         inds_to_adjust = inds_to_adjust | full_taxonomy[tax_level] == clade
         s_index <- grepl(clade, shuffled_names)
-        shuffled_names <- c(shuffled_names[s_index], shuffled_names[!s_index])
+        if (dont_shuf_genus & !tax_level == "genus"){ # don't shuffle genus level is the flag is true to not mess up order
+          shuffled_names <- c(shuffled_names[s_index], shuffled_names[!s_index])
+        }
       }
     }
   }
@@ -104,7 +96,7 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette){
 #' @param taxo_palette (optional) the base palette to use to generate taxonomy specific colors (named). Defaults to Ying Taur palette
 #' @export
 #' @name make_microviz_palette
-make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA){
+make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, dont_shuf_genus=T){
   
   # for our list of required packages run through and insure they are installed:
   req_packages = c("microViz")
@@ -130,10 +122,10 @@ make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA){
   
   if (!is.character(taxo_palette)){
     #if no palette is provided will default to the Ying Taur palette.
-    taxo_palette = base_colors
+    taxo_palette = readRDS(system.file("resources", "default_palette.rds", package = "vdbR"))
   }
   
   #rename colors using basenames:
-  return(rename_taxa_colors(my_palette, taxonomy, rank, taxo_palette))
+  return(rename_taxa_colors(my_palette, taxonomy, rank, taxo_palette, dont_shuf_genus))
   
 }
