@@ -39,27 +39,30 @@ blur_color <- function(color){
 
 
 
-#' This function will generate colors for the taxa_levels provided based on the base_colors and the taxa levels.
+#' This function will generate colors for the taxa_levels provided based on the base_palette provided and the taxa levels.
 #' New colors will be generated in a spread on the appropriate rank. 
 #' 
 #' @param palette the palette to overwrite colors for.
 #' @param full_taxonomy full taxonomy rows for the species to generate colors for.
 #' @param rank the rank of the palette
+#' @param base_palette the base palette to use to generate taxonomy specific colors (named)
 #' @export
 #' @name rename_taxa_colors
-rename_taxa_colors <- function(palette, full_taxonomy, rank){
-  color_group_tax_info = data.frame(group = names(base_colors)) %>%
+rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette){
+  color_group_tax_info = data.frame(group = names(base_palette)) %>%
     dplyr::mutate(tax_level = gsub("(.*)__.*", "\\1", group))
   inds_to_adjust = rep(FALSE, length(palette))
   new_palette = unname(palette)
-  shuffled_names = rownames(full_taxonomy)
+  shuffled_names <- full_taxonomy %>%
+    mutate(joined = paste(phylum, class, order, family, genus)) %>%
+    pull(joined)
   
   # For all the taxa names, update the color and "blur" the colors from higher clades.
   for(tax_level in colnames(full_taxonomy) ){
     new_palette[inds_to_adjust] <- lapply(new_palette[inds_to_adjust], blur_color)
     for(clade in unique(full_taxonomy[tax_level][[1]])){
-      if (clade %in% names(base_colors)){
-        new_palette[which(full_taxonomy[tax_level] == clade)] <- base_colors[clade]
+      if (clade %in% names(base_palette)){
+        new_palette[which(full_taxonomy[tax_level] == clade)] <- base_palette[clade]
         inds_to_adjust = inds_to_adjust | full_taxonomy[tax_level] == clade
         s_index <- grepl(clade, shuffled_names)
         shuffled_names <- c(shuffled_names[s_index], shuffled_names[!s_index])
@@ -67,15 +70,18 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank){
     }
   }
   
+  
   #This will swap around the order of the names so that groups of related genera are together in the palette:
   ordered_palette <- data.frame(
     color = unlist(new_palette),
     name = full_taxonomy[rank][[1]],
-    full_tax = rownames(full_taxonomy)
-  ) %>% dplyr::left_join(data.frame(
-    full_tax = shuffled_names,
+    full_tax = rownames(full_taxonomy) 
+  ) %>% 
+    mutate(joined = paste(full_taxonomy$phylum, full_taxonomy$class, full_taxonomy$order, full_taxonomy$family, full_taxonomy$genus))  %>% 
+    dplyr::left_join(data.frame(
+    joined = shuffled_names,
     order_index = seq(1, length(palette))
-  )) %>%
+  )) %>% 
     dplyr::arrange(order_index)
   
   # Make the new palette and add in the "other" color:
@@ -95,9 +101,10 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank){
 #' @param phy_seq_obj the phyloseq object for which the palette is being made. 
 #' @param n the number of unique taxa to use in the palette (should match what is being used in the plot)
 #' @param rank the taxonomic rank being used in the plot and the palette 
+#' @param taxo_palette (optional) the base palette to use to generate taxonomy specific colors (named). Defaults to Ying Taur palette
 #' @export
 #' @name make_microviz_palette
-make_microviz_palette <- function(phy_seq_obj, n, rank){
+make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA){
   
   # for our list of required packages run through and insure they are installed:
   req_packages = c("microViz")
@@ -108,8 +115,10 @@ make_microviz_palette <- function(phy_seq_obj, n, rank){
     }
   }
   
-  #make the default palette based on phyloseq object and params:
-  my_palette <- microViz::tax_palette(phy_seq_obj, n=n, rank=rank, add = NA) #get a palette with n/rank
+  #make a default palette of the appropriate size with default color gray:
+  top_taxa <- microViz::tax_top(phy_seq_obj, n=n, rank=rank)
+  my_palette <- rep('gray', n)
+  names(my_palette) <- c(top_taxa)
   index_rank <- grep(rank, colnames(phyloseq::tax_table(phy_seq_obj)))
   
   taxonomy <- phy_seq_obj %>%
@@ -119,7 +128,12 @@ make_microviz_palette <- function(phy_seq_obj, n, rank){
     dplyr::filter(.[[index_rank]] %in% names(my_palette)) %>%
     unique()
   
+  if (!is.character(taxo_palette)){
+    #if no palette is provided will default to the Ying Taur palette.
+    taxo_palette = base_colors
+  }
+  
   #rename colors using basenames:
-  return(rename_taxa_colors(my_palette, taxonomy, rank))
+  return(rename_taxa_colors(my_palette, taxonomy, rank, taxo_palette))
   
 }
