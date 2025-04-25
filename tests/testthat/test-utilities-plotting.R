@@ -105,8 +105,6 @@ test_that("The palette is overwritten when custom palette is passed.", {
   
   set.seed(123)
   test_palette <- make_microviz_palette(ps, n_taxa, rank, c(g__Streptococcus = "blue"))
-  View(test_palette)
-  print(test_palette["g__Streptococcus"])
   expect_equal(test_palette["g__Streptococcus"], c(g__Streptococcus ="blue"))
   expect_equal(test_palette["g__Bacteroides"], c(g__Bacteroides ="gray"))
 })
