@@ -17,6 +17,8 @@ make_microviz_palette(phy_seq_obj, n, rank, taxo_palette = NA, shuf_genus = T)
 \item{rank}{the taxonomic rank being used in the plot and the palette}
 
 \item{taxo_palette}{(optional) the base palette to use to generate taxonomy specific colors (named). Defaults to Ying Taur palette}
+
+\item{shuf_genus}{(Boolean, optional) if false will not shuffle order of colors at genus level (useful when using a hierarchical palette with many colors redefined at the genus level). Default T.}
 }
 \description{
 This function will create a microviz palette for phy_seq_obj and use db of colors where possible.

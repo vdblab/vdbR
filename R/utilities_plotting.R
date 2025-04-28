@@ -97,6 +97,7 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, shuf_
 #' @param n the number of unique taxa to use in the palette (should match what is being used in the plot)
 #' @param rank the taxonomic rank being used in the plot and the palette 
 #' @param taxo_palette (optional) the base palette to use to generate taxonomy specific colors (named). Defaults to Ying Taur palette
+#' @param shuf_genus (Boolean, optional) if false will not shuffle order of colors at genus level (useful when using a hierarchical palette with many colors redefined at the genus level). Default T.
 #' @export
 #' @name make_microviz_palette
 make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, shuf_genus=T){
