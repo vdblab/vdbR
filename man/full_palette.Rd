@@ -5,7 +5,7 @@
 \alias{full_palette}
 \title{Default palette}
 \format{
-\subsection{\code{full_palette}}{
+\subsection{named list of genera levels and colors#'}{
 }
 }
 \source{
@@ -16,5 +16,10 @@ full_palette
 }
 \description{
 Default palette for vdbR contains previously published colors along with default palette from Ying Taur
+}
+\examples{
+\dontrun{
+ full_palette
+}
 }
 \keyword{datasets}
