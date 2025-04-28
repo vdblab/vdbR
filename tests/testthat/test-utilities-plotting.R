@@ -74,15 +74,15 @@ test_that("The microviz palette looks similar to previous palette.", {
       sample_id = c("sample_many_exps_mixed_analyses")
     )
     expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, choose_max_experiment = TRUE, testing = TRUE) %>%
-      tax_fix() %>%
-      transform_sample_counts(function(x) round(x*1000000, 0) ))
+      microViz::tax_fix() %>%
+      phyloseq::transform_sample_counts(function(x) round(x*1000000, 0) ))
     
     phyloseq::tax_table(ps) <- clean_SGB_genus(ps)
     n_taxa = 15
     rank = "genus"
     
     set.seed(123)
-    test_palette <- make_microviz_palette(ps, n_taxa, rank)
+    test_palette <- make_microviz_palette(ps, n_taxa, rank, shuf_genus = F)
     expected_palette <- readRDS("palette_for_testthat.rds")
     expect_equal(names(test_palette), names(expected_palette))
     genera = names(test_palette)
@@ -99,8 +99,8 @@ test_that("The palette is overwritten when custom palette is passed.", {
       sample_id = c("sample_many_exps_mixed_analyses")
     )
     expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, choose_max_experiment = TRUE, testing = TRUE) %>%
-                     tax_fix() %>%
-                     transform_sample_counts(function(x) round(x*1000000, 0) ))
+                     microViz::tax_fix() %>%
+                     phyloseq::transform_sample_counts(function(x) round(x*1000000, 0) ))
     
     phyloseq::tax_table(ps) <- clean_SGB_genus(ps)
     n_taxa = 15
