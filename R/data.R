@@ -2,7 +2,7 @@
 #'
 #' Default palette for vdbR contains previously published colors along with default palette from Ying Taur
 #'
-#' @format ## named list of genera levels and colors#' 
+#' @format Named list of genera levels and colors:
 #' @examples
 #' \dontrun{
 #'  full_palette

@@ -5,8 +5,7 @@
 \alias{full_palette}
 \title{Default palette}
 \format{
-\subsection{named list of genera levels and colors#'}{
-}
+Named list of genera levels and colors:
 }
 \source{
 "antonio gomes (color tables and code)"
