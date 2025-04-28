@@ -151,7 +151,7 @@ vdb_make_phylo <- function(metadata, sampleid_col = "sampleid", skip_seqs = TRUE
   print("creating ASV taxonomy table")
   tax <- asv_annotation_blast_ag[asv_annotation_blast_ag$asv_key %in% unique(counts$asv_key), ] %>%
     dplyr::select(-key, -uploaded_date, -blast_pass) %>%
-    dplyr::rename(any_of(c(order = "ordr"))) %>%  # fix typo if exists
+    dplyr::rename(tidyselect::any_of(c(order = "ordr"))) %>%  # fix typo if exists
     tibble::column_to_rownames("asv_key") %>%
     as.matrix() %>%
     phyloseq::tax_table()
@@ -221,7 +221,7 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
                        dplyr::select(experiment_id, project_id),
               by=c("id" = "experiment_id")) %>% 
       dplyr::filter(project_id == proj_id) %>%
-      select(-project_id)
+      dplyr::select(-project_id)
     if (verbose) print(paste("Identified ", nrow(db_experiments), " experiments in Project", proj_id, "associated with those samples"))
   } else{
     if (verbose) print(paste("Identified ", nrow(db_experiments), " experiments associated with those samples"))

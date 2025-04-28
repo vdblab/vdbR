@@ -119,7 +119,7 @@ make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, shuf_ge
   taxonomy <- phy_seq_obj %>%
     phyloseq::tax_table() %>%
     as.data.frame() %>%
-    dplyr::select(1:dplyr::all_of(index_rank)) %>%
+    dplyr::select(1:tidyselect::all_of(index_rank)) %>%
     dplyr::filter(.[[index_rank]] %in% names(my_palette)) %>%
     unique()
   
