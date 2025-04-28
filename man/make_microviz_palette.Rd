@@ -7,7 +7,7 @@ Note, this function will use Genus names as the keys for the color table. If wor
 it is recommended to first clean the tax table of the phyloseq object with the clean_SGB_genus
 function provided in this package.}
 \usage{
-make_microviz_palette(phy_seq_obj, n, rank)
+make_microviz_palette(phy_seq_obj, n, rank, taxo_palette = NA, shuf_genus = T)
 }
 \arguments{
 \item{phy_seq_obj}{the phyloseq object for which the palette is being made.}
@@ -15,6 +15,8 @@ make_microviz_palette(phy_seq_obj, n, rank)
 \item{n}{the number of unique taxa to use in the palette (should match what is being used in the plot)}
 
 \item{rank}{the taxonomic rank being used in the plot and the palette}
+
+\item{taxo_palette}{(optional) the base palette to use to generate taxonomy specific colors (named). Defaults to Ying Taur palette}
 }
 \description{
 This function will create a microviz palette for phy_seq_obj and use db of colors where possible.

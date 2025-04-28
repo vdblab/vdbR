@@ -55,9 +55,9 @@ The MicroVis takes a lot of the annoying considerations out of building the clas
 ```{r}
 tax_table(phy_amplicon) <- clean_refseq_genus(phy_amplicon)
 
-mypal <- make_microviz_palette(phy_amplicon, n=30, rank="genus") 
+mypal <- make_microviz_palette(phy_amplicon, n=30, rank="genus", shuf_genus = F) 
 phy_amplicon %>%
-  comp_barplot(tax_level = "genus", palette = mypal, n_taxa=30 ) +
+  comp_barplot(tax_level = "genus", palette = mypal, n_taxa=30, tax_order = names(mypal)) +
   facet_grid( ~institution, scales = "free", space = "free") + 
   theme(axis.text.x = element_blank()) + 
   theme(legend.position = "bottom", legend.direction = "horizontal")
