@@ -69,11 +69,11 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, shuf_
     name = full_taxonomy[rank][[1]],
     full_tax = rownames(full_taxonomy) 
   ) %>% 
-    mutate(joined = paste(full_taxonomy$phylum, full_taxonomy$class, full_taxonomy$order, full_taxonomy$family, full_taxonomy$genus))  %>% 
+    dplyr::mutate(joined = paste(full_taxonomy$phylum, full_taxonomy$class, full_taxonomy$order, full_taxonomy$family, full_taxonomy$genus))  %>% 
     dplyr::left_join(data.frame(
-    joined = shuffled_names,
-    order_index = seq(1, length(palette))
-  )) %>% 
+      joined = shuffled_names,
+      order_index = seq(1, length(palette))
+    )) %>% 
     dplyr::arrange(order_index)
   
   # Make the new palette and add in the "other" color:
