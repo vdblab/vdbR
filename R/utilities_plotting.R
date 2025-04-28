@@ -38,14 +38,14 @@ blur_color <- function(color){
 #' @param base_palette the base palette to use to generate taxonomy specific colors (named)
 #' @export
 #' @name rename_taxa_colors
-rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, dont_shuf_genus=T){
+rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, shuf_genus=T){
   color_group_tax_info = data.frame(group = names(base_palette)) %>%
     dplyr::mutate(tax_level = gsub("(.*)__.*", "\\1", group))
   inds_to_adjust = rep(FALSE, length(palette))
   new_palette = unname(palette)
   shuffled_names <- full_taxonomy %>%
-    mutate(joined = paste(phylum, class, order, family, genus)) %>%
-    pull(joined)
+    dplyr::mutate(joined = paste(phylum, class, order, family, genus)) %>%
+    dplyr::pull(joined)
   
   # For all the taxa names, update the color and "blur" the colors from higher clades.
   for(tax_level in colnames(full_taxonomy) ){
@@ -55,7 +55,7 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, dont_
         new_palette[which(full_taxonomy[tax_level] == clade)] <- base_palette[clade]
         inds_to_adjust = inds_to_adjust | full_taxonomy[tax_level] == clade
         s_index <- grepl(clade, shuffled_names)
-        if (dont_shuf_genus & !tax_level == "genus"){ # don't shuffle genus level is the flag is true to not mess up order
+        if (shuf_genus | !tax_level == "genus"){ # don't shuffle genus level is the flag is true to not mess up order
           shuffled_names <- c(shuffled_names[s_index], shuffled_names[!s_index])
         }
       }
@@ -96,7 +96,7 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, dont_
 #' @param taxo_palette (optional) the base palette to use to generate taxonomy specific colors (named). Defaults to Ying Taur palette
 #' @export
 #' @name make_microviz_palette
-make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, dont_shuf_genus=T){
+make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, shuf_genus=T){
   
   # for our list of required packages run through and insure they are installed:
   req_packages = c("microViz")
@@ -126,6 +126,6 @@ make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, dont_sh
   }
   
   #rename colors using basenames:
-  return(rename_taxa_colors(my_palette, taxonomy, rank, taxo_palette, dont_shuf_genus))
+  return(rename_taxa_colors(my_palette, taxonomy, rank, taxo_palette, shuf_genus))
   
 }
