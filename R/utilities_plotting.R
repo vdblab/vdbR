@@ -124,7 +124,7 @@ make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, shuf_ge
   
   if (!is.character(taxo_palette)){
     #if no palette is provided will default to the Ying Taur palette.
-    taxo_palette = readRDS(system.file("resources", "default_palette.rds", package = "vdbR"))
+    taxo_palette = vdbR::full_palette
   }
   
   #rename colors using basenames:
