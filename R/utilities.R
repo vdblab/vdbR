@@ -151,7 +151,7 @@ vdb_make_phylo <- function(metadata, sampleid_col = "sampleid", skip_seqs = TRUE
   print("creating ASV taxonomy table")
   tax <- asv_annotation_blast_ag[asv_annotation_blast_ag$asv_key %in% unique(counts$asv_key), ] %>%
     dplyr::select(-key, -uploaded_date, -blast_pass) %>%
-    dplyr::rename(tidyselect::any_of(c(order = "ordr"))) %>%  # fix typo if exists
+    dplyr::rename(any_of(c(order = "ordr"))) %>%  # fix typo if exists
     tibble::column_to_rownames("asv_key") %>%
     as.matrix() %>%
     phyloseq::tax_table()
