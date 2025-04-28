@@ -83,6 +83,7 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, shuf_
   
   gray_locs <- grepl("gray", new_palette)
   new_palette <- c(new_palette[!gray_locs], new_palette[gray_locs])
+  new_palette <- c(new_palette, c(Other = "gray"))
   
   return(new_palette)
 }
