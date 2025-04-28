@@ -76,12 +76,15 @@ rename_taxa_colors <- function(palette, full_taxonomy, rank, base_palette, shuf_
     )) %>% 
     dplyr::arrange(order_index)
   
-  # Make the new palette and add in the "other" color:
+  # Make the new palette:
   new_palette <- ordered_palette$color
-  new_palette <- c(new_palette, "lightgrey")
   new_palette <- as.character(new_palette)
+  names(new_palette) <- ordered_palette$name
   
-  names(new_palette) <- c(ordered_palette$name, "Other")
+  gray_locs <- grepl("gray", new_palette)
+  new_palette <- c(new_palette[!gray_locs], new_palette[gray_locs])
+  new_palette <- c(new_palette, c(Other = "gray"))
+  
   return(new_palette)
 }
 
@@ -122,7 +125,7 @@ make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, shuf_ge
   
   if (!is.character(taxo_palette)){
     #if no palette is provided will default to the Ying Taur palette.
-    taxo_palette = readRDS(system.file("resources", "default_palette.rds", package = "vdbR"))
+    taxo_palette = vdbR::full_palette
   }
   
   #rename colors using basenames:

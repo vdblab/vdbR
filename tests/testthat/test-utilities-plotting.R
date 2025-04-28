@@ -68,45 +68,50 @@ test_that("The microviz palette making function correctly changes genera that sh
 test_that("The microviz palette looks similar to previous palette.", {
   #only run test if on-prem
   skip_if(Sys.getenv("GITHUB_ACTION") != "")
-  connect_database()
-  data = data.frame(
-    sample_id = c("sample_many_exps_mixed_analyses")
-  )
-  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, choose_max_experiment = TRUE, testing = TRUE) %>%
-    microViz::tax_fix() %>%
-    phyloseq::transform_sample_counts(function(x) round(x*1000000, 0) ))
-  
-  phyloseq::tax_table(ps) <- clean_SGB_genus(ps)
-  n_taxa = 15
-  rank = "genus"
-  
-  set.seed(123)
-  test_palette <- make_microviz_palette(ps, n_taxa, rank, shuf_genus =FALSE)
-  expected_palette <- readRDS("palette_for_testthat.rds")
-  expect_equal(names(test_palette), names(expected_palette))
-  genera = names(test_palette)
-  expect_equal(test_palette[genera], expected_palette[genera])
+
+  if (requireNamespace('microViz', quietly=TRUE) ){ 
+    connect_database()
+    data = data.frame(
+      sample_id = c("sample_many_exps_mixed_analyses")
+    )
+    expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, choose_max_experiment = TRUE, testing = TRUE) %>%
+      microViz::tax_fix() %>%
+      phyloseq::transform_sample_counts(function(x) round(x*1000000, 0) ))
+    
+    phyloseq::tax_table(ps) <- clean_SGB_genus(ps)
+    n_taxa = 15
+    rank = "genus"
+    
+    set.seed(123)
+    test_palette <- make_microviz_palette(ps, n_taxa, rank, shuf_genus = F)
+    expected_palette <- readRDS("palette_for_testthat.rds")
+    expect_equal(names(test_palette), names(expected_palette))
+    genera = names(test_palette)
+    expect_equal(test_palette[genera], expected_palette[genera])
+  }
 })
 
 test_that("The palette is overwritten when custom palette is passed.", {
   #only run test if on-prem
   skip_if(Sys.getenv("GITHUB_ACTION") != "")
-  connect_database()
-  data = data.frame(
-    sample_id = c("sample_many_exps_mixed_analyses")
-  )
-  expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, choose_max_experiment = TRUE, testing = TRUE) %>%
-                   microViz::tax_fix() %>%
-                   phyloseq::transform_sample_counts(function(x) round(x*1000000, 0) ))
-  
-  phyloseq::tax_table(ps) <- clean_SGB_genus(ps)
-  n_taxa = 15
-  rank = "genus"
-  
-  set.seed(123)
-  test_palette <- make_microviz_palette(ps, n_taxa, rank, c(g__Streptococcus = "blue"))
-  expect_equal(test_palette["g__Streptococcus"], c(g__Streptococcus ="blue"))
-  expect_equal(test_palette["g__Bacteroides"], c(g__Bacteroides ="gray"))
+  if (requireNamespace('microViz', quietly=TRUE) ){ 
+    connect_database()
+    data = data.frame(
+      sample_id = c("sample_many_exps_mixed_analyses")
+    )
+    expect_warning(ps <- vdb_make_phylo_mgx(data, sampleid_col = "sample_id", app_id=1, choose_max_experiment = TRUE, testing = TRUE) %>%
+                     microViz::tax_fix() %>%
+                     phyloseq::transform_sample_counts(function(x) round(x*1000000, 0) ))
+    
+    phyloseq::tax_table(ps) <- clean_SGB_genus(ps)
+    n_taxa = 15
+    rank = "genus"
+    
+    set.seed(123)
+    test_palette <- make_microviz_palette(ps, n_taxa, rank, c(g__Streptococcus = "blue"))
+    expect_equal(test_palette["g__Streptococcus"], c(g__Streptococcus ="blue"))
+    expect_equal(test_palette["g__Bacteroides"], c(g__Bacteroides ="gray"))
+  }
 })
 
 
