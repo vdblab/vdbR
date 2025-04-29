@@ -221,7 +221,7 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
                        dplyr::select(experiment_id, project_id),
               by=c("id" = "experiment_id")) %>% 
       dplyr::filter(project_id == proj_id) %>%
-      select(-project_id)
+      dplyr::select(-project_id)
     if (verbose) print(paste("Identified ", nrow(db_experiments), " experiments in Project", proj_id, "associated with those samples"))
   } else{
     if (verbose) print(paste("Identified ", nrow(db_experiments), " experiments associated with those samples"))

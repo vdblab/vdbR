@@ -55,14 +55,32 @@ The MicroVis takes a lot of the annoying considerations out of building the clas
 ```{r}
 tax_table(phy_amplicon) <- clean_refseq_genus(phy_amplicon)
 
-mypal <- make_microviz_palette(phy_amplicon, n=30, rank="genus") 
+mypal <- make_microviz_palette(phy_amplicon, n=30, rank="genus", shuf_genus = F) 
 phy_amplicon %>%
-  comp_barplot(tax_level = "genus", palette = mypal, n_taxa=30 ) +
+  comp_barplot(tax_level = "genus", palette = mypal, n_taxa=30, tax_order = names(mypal)) +
   facet_grid( ~institution, scales = "free", space = "free") + 
   theme(axis.text.x = element_blank()) + 
   theme(legend.position = "bottom", legend.direction = "horizontal")
 
 ```
+
+The palette used in previous publications utilized higher-order colors as well.  Recreate this behavior by setting `n` to the number of genera as follows:
+
+```{r}
+fullpal <- make_microviz_palette(phy_amplicon, n=ntaxa(phy_amplicon), rank="genus", shuf_genus = FALSE) 
+
+
+(p_comp <- phy_amplicon %>%
+  comp_barplot(tax_level = "genus", palette = fullpal, n_taxa=ntaxa(phy_amplicon), bar_outline_colour = NA, tax_order = names(fullpal) ) +
+  theme(axis.text.x = element_blank()) + 
+  theme(legend.position = "bottom", legend.direction = "horizontal") + 
+  guides(fill="none") + 
+  scale_y_continuous(expand=c(0, 0)) )
+
+
+```
+
+
 
 Lets plot some beta diversity
 ```{r}
