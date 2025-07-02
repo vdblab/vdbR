@@ -208,7 +208,7 @@ get_metaphlan_analyses <- function(con, analysis_ids, schema="public") {
 #' \dontrun{
 #' get_sample_isabl_info(list(db[, sample_id_col]), app_id = 66)
 #' }
-get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=NA, schema = "public"){
+get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=NA, schema = "public", allow_excluded=FALSE){
   assert_db_connected()
   db_samples <- get_subset_pg_df("isabl_api_sample", "identifier", sample_ids, schema = schema)
   if (verbose) print(paste("Identified ", nrow(db_samples), "samples of the ", length(sample_ids), " samples requested"))
@@ -227,13 +227,16 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
     if (verbose) print(paste("Identified ", nrow(db_experiments), " experiments associated with those samples"))
   }
 
-  db_analysis_targets <- get_subset_pg_df("isabl_api_analysis_targets", "experiment_id", list(db_experiments$id), schema = schema)
+  db_analysis_targets <- get_subset_pg_df("tmp_isabl_api_analysis_targets", "experiment_id", list(db_experiments$id), schema = schema)
   db_applications <- get_subset_pg_df("isabl_api_application", "id", c(app_id), schema = schema)
 
-  db_analyses <- get_subset_pg_df("isabl_api_analysis", "id", list(db_analysis_targets$analysis_id), schema = schema)
+  db_analyses <- get_subset_pg_df("tmp_isabl_api_analysis", "id", list(db_analysis_targets$analysis_id), schema = schema)
   if(!is.na(app_id)){
     db_analyses <- db_analyses %>%
       dplyr::filter(application_id == app_id) 
+  }
+  if (!allow_excluded){
+    db_analyses <- db_analyses %>% filter(is.na(exclusion_reason))
   }
   if (nrow(db_analyses) == 0){
     if(is.na(app_id)){
