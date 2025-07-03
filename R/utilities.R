@@ -227,16 +227,18 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
     if (verbose) print(paste("Identified ", nrow(db_experiments), " experiments associated with those samples"))
   }
 
-  db_analysis_targets <- get_subset_pg_df("tmp_isabl_api_analysis_targets", "experiment_id", list(db_experiments$id), schema = schema)
+  db_analysis_targets <- get_subset_pg_df("isabl_api_analysis_targets", "experiment_id", list(db_experiments$id), schema = schema)
   db_applications <- get_subset_pg_df("isabl_api_application", "id", c(app_id), schema = schema)
 
-  db_analyses <- get_subset_pg_df("tmp_isabl_api_analysis", "id", list(db_analysis_targets$analysis_id), schema = schema)
+  db_analyses <- get_subset_pg_df("isabl_api_analysis", "id", list(db_analysis_targets$analysis_id), schema = schema)
   if(!is.na(app_id)){
     db_analyses <- db_analyses %>%
       dplyr::filter(application_id == app_id) 
   }
   if (!allow_excluded){
-    db_analyses <- db_analyses %>% filter(exclusion_reason == "")
+    excluded = db_analyses %>% dplyr::filter(exclusion_reason != "")
+    print(paste0("Dropping ", nrow(excluded), " analyses tagged for exclusion:", paste0(excluded$id, collapse = ",", sep="")))
+    db_analyses <- db_analyses %>% dplyr::filter(exclusion_reason == "")
   }
   if (nrow(db_analyses) == 0){
     if(is.na(app_id)){
