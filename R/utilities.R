@@ -235,10 +235,11 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
     db_analyses <- db_analyses %>%
       dplyr::filter(application_id == app_id) 
   }
+  print(db_analyses$exclusion_reason)
   if (!allow_excluded){
-    excluded = db_analyses %>% dplyr::filter(exclusion_reason != "")
+    excluded = db_analyses %>% dplyr::filter(exclusion_reason != "" & !is.na(exclusion_reason))
     print(paste0("Dropping ", nrow(excluded), " analyses tagged for exclusion:", paste0(excluded$id, collapse = ",", sep="")))
-    db_analyses <- db_analyses %>% dplyr::filter(exclusion_reason == "")
+    db_analyses <- db_analyses %>% dplyr::filter(exclusion_reason == "" | is.na(exclusion_reason))
   }
   if (nrow(db_analyses) == 0){
     if(is.na(app_id)){
