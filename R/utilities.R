@@ -236,7 +236,7 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
       dplyr::filter(application_id == app_id) 
   }
   if (!allow_excluded){
-    db_analyses <- db_analyses %>% filter(is.na(exclusion_reason))
+    db_analyses <- db_analyses %>% filter(exclusion_reason == "")
   }
   if (nrow(db_analyses) == 0){
     if(is.na(app_id)){
