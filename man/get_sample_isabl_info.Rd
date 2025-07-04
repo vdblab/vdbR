@@ -9,7 +9,8 @@ get_sample_isabl_info(
   verbose = FALSE,
   app_id = NA,
   proj_id = NA,
-  schema = "public"
+  schema = "public",
+  allow_excluded = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ get_sample_isabl_info(
 \item{proj_id}{isabl project to filter by}
 
 \item{schema}{name of schema to query; public for production tables, test_tables for dev, and main when using sqlitedb}
+
+\item{allow_excluded}{Attempt to include analyses tagged for exclusion}
 }
 \description{
 Given sample-ids - get the associated experiments and analyses associated with those experiments (optionally filtering by project or app_id)

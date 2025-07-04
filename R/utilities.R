@@ -201,6 +201,7 @@ get_metaphlan_analyses <- function(con, analysis_ids, schema="public") {
 #' @param app_id isabl app identifier (optional)
 #' @param proj_id isabl project to filter by
 #' @param schema name of schema to query; public for production tables, test_tables for dev, and main when using sqlitedb
+#' @param allow_excluded Attempt to include analyses tagged for exclusion
 #' @name get_sample_isabl_info
 #' @export
 #' @examples
