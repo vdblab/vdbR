@@ -84,7 +84,8 @@ test_that("The microviz palette looks similar to previous palette.", {
     
     set.seed(123)
     test_palette <- make_microviz_palette(ps, n_taxa, rank, shuf_genus = F)
-    expected_palette <- readRDS("palette_for_testthat.rds")
+    # updated 2025-07-07 to reverse sort order for matching legacy behavior
+    expected_palette <- rev(sort(readRDS("palette_for_testthat.rds")))
     expect_equal(names(test_palette), names(expected_palette))
     genera = names(test_palette)
     expect_equal(test_palette[genera], expected_palette[genera])
@@ -131,9 +132,9 @@ test_that("sample legacy composition plots looks similiar", {
   sample_order <- labels(as.dendrogram(hclust(phyloseq::distance(phy_amplicon, method = "bray"))))
   fullpal <- make_microviz_palette(phy_amplicon, n=phyloseq::ntaxa(phy_amplicon), rank="genus", shuf_genus = FALSE) 
   
-  p_comp <- phy_amplicon %>%
+   p_comp <- phy_amplicon %>%
     microViz::comp_barplot(tax_level = "genus", palette = fullpal, n_taxa=phyloseq::ntaxa(phy_amplicon), bar_outline_colour = NA, sample_order = sample_order, tax_order = names(fullpal) ) +
-    ggplot2::theme(axis.text.x = ggplot2::element_blank()) + 
+    ggplot2::theme(axis.text.x = ggplot2::element_blank()) +
     ggplot2::theme(legend.position = "bottom", legend.direction = "horizontal") + 
     ggplot2::guides(fill="none") + 
     ggplot2::scale_y_continuous(expand=c(0, 0)) 

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS "asv_counts_ag"(
 CREATE TABLE "isabl_api_analysis" (
     "id" int4 NOT NULL,
     "storage_url" varchar(1000),
+    "exclusion_reason"  varchar(1000),
     "application_id" int4,
     "project_level_analysis_id" int4,
     "individual_level_analysis_id" int4,

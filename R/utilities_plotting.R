@@ -131,6 +131,9 @@ make_microviz_palette <- function(phy_seq_obj, n, rank, taxo_palette=NA, shuf_ge
   }
   
   #rename colors using basenames:
-  return(rename_taxa_colors(my_palette, taxonomy, rank, taxo_palette, shuf_genus))
+  
+  newpal = rename_taxa_colors(my_palette, taxonomy, rank, taxo_palette, shuf_genus)
+  # return reverse sorted colors to match legacy behavior
+  return(rev(sort(newpal)))
   
 }

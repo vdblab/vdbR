@@ -17,7 +17,7 @@ asv_annotation_blast_color_ag %>% filter(asv_key %in%counts$asv_key) %>% dplyr::
 
 
 if(file.exists( "inst/extdata/db.sqlite")) system("rm  inst/extdata/db.sqlite")
-system("sqlite3 inst/extdata/db.sqlite < tests/populate_test_db.sql ")
+system("sqlite3 inst/extdata/db.sqlite < tests/db/populate_test_db.sql ")
 
 # test with
 # psql_con = DBI::dbConnect(RSQLite::SQLite(), "tests/db.sqlite")

@@ -201,6 +201,7 @@ get_metaphlan_analyses <- function(con, analysis_ids, schema="public") {
 #' @param app_id isabl app identifier (optional)
 #' @param proj_id isabl project to filter by
 #' @param schema name of schema to query; public for production tables, test_tables for dev, and main when using sqlitedb
+#' @param allow_excluded Attempt to include analyses tagged for exclusion
 #' @name get_sample_isabl_info
 #' @export
 #' @examples
@@ -208,7 +209,7 @@ get_metaphlan_analyses <- function(con, analysis_ids, schema="public") {
 #' \dontrun{
 #' get_sample_isabl_info(list(db[, sample_id_col]), app_id = 66)
 #' }
-get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=NA, schema = "public"){
+get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=NA, schema = "public", allow_excluded=FALSE){
   assert_db_connected()
   db_samples <- get_subset_pg_df("isabl_api_sample", "identifier", sample_ids, schema = schema)
   if (verbose) print(paste("Identified ", nrow(db_samples), "samples of the ", length(sample_ids), " samples requested"))
@@ -234,6 +235,12 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
   if(!is.na(app_id)){
     db_analyses <- db_analyses %>%
       dplyr::filter(application_id == app_id) 
+  }
+  print(db_analyses$exclusion_reason)
+  if (!allow_excluded){
+    excluded = db_analyses %>% dplyr::filter(exclusion_reason != "" & !is.na(exclusion_reason))
+    print(paste0("Dropping ", nrow(excluded), " analyses tagged for exclusion:", paste0(excluded$id, collapse = ",", sep="")))
+    db_analyses <- db_analyses %>% dplyr::filter(exclusion_reason == "" | is.na(exclusion_reason))
   }
   if (nrow(db_analyses) == 0){
     if(is.na(app_id)){
