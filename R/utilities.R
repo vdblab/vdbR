@@ -424,8 +424,8 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
     dplyr::select(c(analysis_id, sample_identifier)) %>%
     unique() %>%
     dplyr::right_join(data.frame(analysis_ids = phyloseq::sample_names(ot)), by=c("analysis_id" = "analysis_ids"))
-
-  phyloseq::sample_names(ot) = sample_names_df$sample_identifier
+  
+  phyloseq::sample_names(ot) = data.frame(analysis_id=phyloseq::sample_names(ot)) %>% dplyr::left_join(sample_names_df, by="analysis_id") %>% dplyr::pull(sample_identifier)
 
   if (verbose) print("contructing phyloseq object")
   return(phyloseq::phyloseq(ot, phyloseq::tax_table(tax_tab), phyloseq::sample_data(samp)))

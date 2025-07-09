@@ -184,4 +184,19 @@ test_that("test clean_SGB_genus name reformatting", {
          failure_message = "The expected set of cleaned up names is not a subset of columns returned. ")
 })
 
+test_that("test that sample order is retained", {
+  # the exact conditions by which this happens is unclear, but 
+  # early versions returned analyses relabeled with the incorrect sampleid
+  # try the following to see the issue in action
+  # git checkout 5c895f987631a009b0f287c48961194eae715e68 R/utilities.R 
+  skip_if(Sys.getenv("GITHUB_ACTIONS") != "")
+  connect_database(bundled = FALSE)
+  thisdf <- structure(
+    list(sampleid = c("1361K", "1361X", "1361J", "1461J", "1361G"),
+         x = c("1361K", "1361X", "1361J", "1461J", "1361G")),
+    row.names = c(NA, -5L), class = "data.frame")
+  ps <- vdb_make_phylo_mgx(thisdf, sampleid_col = "sampleid", app_id=66, testing = FALSE)
+  expect_equal(max(phyloseq::otu_table(ps)[, "1361G"]), 82.62554)
+})
+
 
