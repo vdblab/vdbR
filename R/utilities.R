@@ -236,7 +236,10 @@ get_sample_isabl_info <- function(sample_ids, verbose=FALSE, app_id=NA, proj_id=
     db_analyses <- db_analyses %>%
       dplyr::filter(application_id == app_id) 
   }
-  print(db_analyses$exclusion_reason)
+  if (verbose)  {
+    print("analyses's exclusion_reason")
+    print(db_analyses$exclusion_reason)
+  }
   if (!allow_excluded){
     excluded = db_analyses %>% dplyr::filter(exclusion_reason != "" & !is.na(exclusion_reason))
     print(paste0("Dropping ", nrow(excluded), " analyses tagged for exclusion:", paste0(excluded$id, collapse = ",", sep="")))
@@ -371,7 +374,9 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
           dplyr::filter(analysis_id == max_analysis)
         md <- md %>%
           dplyr::filter(ia_id %in% db_all_joined$max_analysis)
-
+        results <- results %>% 
+          dplyr::select(clade_name, dplyr::all_of(as.character(unique(db_all_joined$max_analysis)))) 
+        
     }
     else{
       print(db_all_joined %>% dplyr::filter(num_exps_per_analysis > 1))
@@ -399,7 +404,7 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
   # Create phyloseq section:
   #------------------------------------------------------------------------------------------------------
   if (verbose) print("creating otu table")
-  ot <- phyloseq::otu_table(results %>% tibble::column_to_rownames("clade_name"), taxa_are_rows = TRUE)
+  ot <-  phyloseq::otu_table(results %>% tibble::column_to_rownames("clade_name"), taxa_are_rows = TRUE)
   tax_tab <- dplyr::bind_rows(lapply(gsub("\\|", ";", rownames(ot)), phyloseq::parse_taxonomy_qiime)) %>% as.matrix()
   rownames(tax_tab) <- rownames(ot)
 
@@ -415,7 +420,7 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
     warning("Removing the following samples from metadata lacking analyses")
     cat(paste0("\n\n-----------------------\nThese are the samples lacking analyses: \n\n",
     sum(is.na(samp$analysis_id)), " NA analyses removed."))
-    print(samp[is.na(samp$analysis_id), ])
+    print(rownames(samp[is.na(samp$analysis_id), ]))
     samp <- samp %>% dplyr::filter(!is.na(analysis_id))
   }
   
