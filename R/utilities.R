@@ -180,11 +180,22 @@ vdb_make_phylo <- function(metadata, sampleid_col = "sampleid", skip_seqs = TRUE
 
 
 get_metaphlan_analyses <- function(con, analysis_ids, schema="public") {
-  raw_results <- get_subset_pg_df("mgx_metaphlan", "ia_id", analysis_ids, schema=schema) %>%
+  raw_results <- get_subset_pg_df("mgx_metaphlan", "ia_id", analysis_ids, schema=schema) 
+  # we have to deal with samples having no classified --  in those cases metaphlan reports 
+  # estimated_number_of_reads_from_the_clade as 0, but to make it work with the rest of our code we modify that
+  # to nreads_input (eg all the input reads are from the unclassified clade)
+  if (sum(raw_results[raw_results$clade_name == "unclassified", "estimated_number_of_reads_from_the_clade"]) > 0){
+    print(raw_results[raw_results$clade_name== "unclassified", "ia_id"])
+    stop("some of the above analyses have metaphlan failures where estimated_number of reads from the clade is not zero as expected; please alert of the vdbR delevopers that the metaphlan output has changed")
+  }
+  # TODO: parametarize this to get sgb level results
+  results_with_zeros_handled <- raw_results %>% 
+    dplyr::mutate(estimated_number_of_reads_from_the_clade = ifelse(clade_name == "unclassified", nreads_input, estimated_number_of_reads_from_the_clade)) %>% 
+    dplyr::mutate(clade_name = ifelse(clade_name == "unclassified", "UNCLASSIFIED", clade_name)) %>%
     dplyr::filter(grepl("UNCLASSIFIED", clade_name) | grepl(".*\\|s__.*", clade_name)) %>%
     dplyr::filter(!grepl(".*t__.*", clade_name)) %>%
     dplyr::mutate(clade_name = ifelse(clade_name == "UNCLASSIFIED", "k__UNCLASSIFIED", clade_name))
-  wide_results <- raw_results %>%
+  wide_results <- results_with_zeros_handled %>%
     dplyr::select(ia_id, clade_name, relative_abundance) %>%
     tidyr::pivot_wider(names_from = ia_id, values_from = relative_abundance, values_fill = 0)
   md <- raw_results %>%
