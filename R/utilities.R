@@ -179,11 +179,42 @@ vdb_make_phylo <- function(metadata, sampleid_col = "sampleid", skip_seqs = TRUE
 
 
 
-get_metaphlan_analyses <- function(con, analysis_ids, schema="public") {
-  raw_results <- get_subset_pg_df("mgx_metaphlan", "ia_id", analysis_ids, schema=schema) %>%
+get_metaphlan_analyses <- function(con, analysis_ids, schema="public", include_failures=FALSE) {
+  raw_results <- get_subset_pg_df("mgx_metaphlan", "ia_id", analysis_ids, schema=schema) 
+  # we have to deal with samples having no classified --  in those cases metaphlan reports 
+  # estimated_number_of_reads_from_the_clade as 0, but to make it work with the rest of our code we modify that
+  # to nreads_input (eg all the input reads are from the unclassified clade)
+  mpa_failures <- raw_results %>% dplyr::filter(clade_name == "unclassified") %>% dplyr::pull(ia_id)
+  if (include_failures){
+    if (sum(raw_results[raw_results$clade_name == "unclassified", "estimated_number_of_reads_from_the_clade"]) > 0){
+      print(raw_results[raw_results$clade_name== "unclassified", "ia_id"])
+      stop("some of the above analyses have metaphlan failures where estimated_number of reads from the clade is not zero as expected; please alert of the vdbR delevopers that the metaphlan output has changed")
+    }
+    raw_results <- raw_results %>% 
+      dplyr::mutate(estimated_number_of_reads_from_the_clade = ifelse(clade_name == "unclassified", nreads_input, estimated_number_of_reads_from_the_clade)) %>% 
+      dplyr::mutate(clade_name = ifelse(clade_name == "unclassified", "UNCLASSIFIED", clade_name))
+  }  else{
+    if(length(mpa_failures) != 0) {
+      # get corresponding sampleids for informative error message
+      for (tbl in c("isabl_api_analysis_targets", "isabl_api_experiment", "isabl_api_sample")){
+        if (!tbl %in% ls()) {
+          get_table_from_database(tbl)
+        }
+      }
+      problem_sample_analyses <- data.frame(analysis_id = mpa_failures) %>% 
+        dplyr::left_join( isabl_api_analysis_targets, by="analysis_id") %>% 
+        dplyr::left_join(isabl_api_experiment %>% dplyr::select(experiment_id = id, sample_id), by="experiment_id") %>%
+        dplyr::left_join(isabl_api_sample %>% dplyr::select(sample_id = id, identifier), by="sample_id") %>% 
+        dplyr::select(analysis_id, identifier)
+      stop(paste("Metaphlan detected no taxa in the following sample's analyses; these samples must be removed from your metadata to create a phyloseq object:\n", paste0(capture.output(print(problem_sample_analyses)), collapse = "\n")))
+    }
+  }
+  # TODO: parametarize this to get sgb level results
+  raw_results <- raw_results %>% 
     dplyr::filter(grepl("UNCLASSIFIED", clade_name) | grepl(".*\\|s__.*", clade_name)) %>%
     dplyr::filter(!grepl(".*t__.*", clade_name)) %>%
     dplyr::mutate(clade_name = ifelse(clade_name == "UNCLASSIFIED", "k__UNCLASSIFIED", clade_name))
+  
   wide_results <- raw_results %>%
     dplyr::select(ia_id, clade_name, relative_abundance) %>%
     tidyr::pivot_wider(names_from = ia_id, values_from = relative_abundance, values_fill = 0)

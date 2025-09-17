@@ -200,3 +200,21 @@ test_that("test that sample order is retained", {
 })
 
 
+test_that("including metaphlan failures is handled", {
+  # 32298 is a sample with no mapped reads  
+  skip_if(Sys.getenv("GITHUB_ACTIONS") != "")
+  connect_database(bundled = FALSE)
+  analysis_ids = c(32298, 32299)
+  res =  get_metaphlan_analyses(con = psql_con, analysis_ids, include_failures=TRUE)  
+  # assert (a) that the column exists on output and (b) that we have full  100% abundance for that sample
+  expect_equal(sum(res[[1]]$`32298`), 100)
+})
+
+
+test_that("excluding metaphlan failures is handled", {
+  # 32298 is a sample with no mapped reads  
+  skip_if(Sys.getenv("GITHUB_ACTIONS") != "")
+  connect_database(bundled = FALSE)
+  analysis_ids = c(32298, 32299)
+  expect_error(get_metaphlan_analyses(con = psql_con, analysis_ids, include_failures=FALSE))  
+})
