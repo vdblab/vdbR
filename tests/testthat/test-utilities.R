@@ -218,3 +218,12 @@ test_that("excluding metaphlan failures is handled", {
   analysis_ids = c(32298, 32299)
   expect_error(get_metaphlan_analyses(con = psql_con, analysis_ids, include_failures=FALSE))  
 })
+
+test_that("phy by oligo_id builds correctly", {
+  tmp <- data.frame("sampleid" = "2190B", "group"="A")
+  ps_by_sampleid <- vdb_make_phylo(tmp, sampleid_col = "sampleid")
+  ps_by_oligosid <- vdb_make_phylo(tmp, sampleid_col = "sampleid", by_oligo_id = TRUE)
+  expect_equal(length(sample_names(ps_by_sampleid)), 1)
+  expect_equal(length(sample_names(ps_by_sampleid)), 2)
+  
+})

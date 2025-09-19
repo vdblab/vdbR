@@ -126,52 +126,55 @@ padMRN <- base::Vectorize(USE.NAMES = FALSE, function(mrn) {
 #' \dontrun{
 #' vdb_make_phylo(test_metadata, sampleid_col = "sampleid")
 #' }
-vdb_make_phylo <- function(metadata, sampleid_col = "sampleid", skip_seqs = TRUE) {
-  if (!is.data.frame(metadata)) stop("metadata must be a data.frame")
+vdb_make_phylo <- function (metadata, sampleid_col = "sampleid", skip_seqs = TRUE, by_oligo_id= FALSE) 
+{
+  if (!is.data.frame(metadata)) 
+    stop("metadata must be a data.frame")
+  
   metadata <- process_metadata(metadata, sampleid_col)
-  # Make a phyloseq object from some metadata with sampleids
-  # TODO add a phylogeny
   assert_db_connected()
   print("getting counts")
-  counts <- get_counts_subset(unique(data.frame(metadata)[, sampleid_col]))
-
+  counts <- get_counts_subset(unique(data.frame(metadata)[, 
+                                                          sampleid_col]), pre_filter = !by_oligo_id)
   print("creating otu table")
-  tab <- counts %>%
-    dplyr::select(asv_key, sampleid, count) %>%
-    tidyr::pivot_wider(names_from = "asv_key", values_from = "count", values_fill = 0) %>%
-    tibble::column_to_rownames("sampleid")
-  ot <- phyloseq::otu_table(tab,
-    taxa_are_rows = FALSE
-  )
+  if (by_oligo_id) sampleid_col <- "oligos_id"
+  tab <- counts %>% dplyr::select(asv_key, all_of(sampleid_col), count) %>% 
+    tidyr::pivot_wider(names_from = "asv_key", values_from = "count", 
+                       values_fill = 0) %>% tibble::column_to_rownames(sampleid_col)
+  ot <- phyloseq::otu_table(tab, taxa_are_rows = FALSE)
   if (!"asv_annotation_blast_ag" %in% ls()) {
     print("getting ASV annotations")
     get_table_from_database("asv_annotation_blast_ag")
   }
-
   print("creating ASV taxonomy table")
-  tax <- asv_annotation_blast_ag[asv_annotation_blast_ag$asv_key %in% unique(counts$asv_key), ] %>%
-    dplyr::select(-key, -uploaded_date, -blast_pass) %>%
-    dplyr::rename(any_of(c(order = "ordr"))) %>%  # fix typo if exists
-    tibble::column_to_rownames("asv_key") %>%
-    as.matrix() %>%
+  tax <- asv_annotation_blast_ag[asv_annotation_blast_ag$asv_key %in% 
+                                   unique(counts$asv_key), ] %>% dplyr::select(-key, -uploaded_date, 
+                                                                               -blast_pass) %>% dplyr::rename(any_of(c(order = "ordr"))) %>% 
+    tibble::column_to_rownames("asv_key") %>% as.matrix() %>% 
     phyloseq::tax_table()
-
   print("creating sample_data")
-  samp <- phyloseq::sample_data(metadata %>% tibble::column_to_rownames(sampleid_col))
+  if (by_oligo_id){
+    samp <- phyloseq::sample_data(
+      metadata %>% 
+        dplyr::left_join(counts %>% dplyr::select(sampleid, oligos_id) %>% dplyr::distinct()) %>% tibble::column_to_rownames(sampleid_col)
+    )
+  } else{
+    samp <- phyloseq::sample_data(metadata  %>% tibble::column_to_rownames(sampleid_col))
+  }
   if (!skip_seqs) {
     if (!"asv_sequences_ag" %in% ls()) {
       print("getting ASV sequences")
       get_table_from_database("asv_sequences_ag")
     }
-
     print("making DNAStringSeq")
-    seqs <- asv_sequences_ag[asv_sequences_ag$asv_key %in% unique(counts$asv_key), c("asv_key", "asv_sequence")]
+    seqs <- asv_sequences_ag[asv_sequences_ag$asv_key %in% 
+                               unique(counts$asv_key), c("asv_key", "asv_sequence")]
     dss <- Biostrings::DNAStringSet(x = seqs$asv_sequence)
     names(dss) <- seqs$asv_key
-
     print("constructing phyloseq object")
     return(phyloseq::phyloseq(ot, tax, samp, phyloseq::refseq(dss)))
-  } else {
+  }
+  else {
     print("constructing phyloseq object (without sequences)")
   }
   return(phyloseq::phyloseq(ot, tax, samp))
