@@ -136,6 +136,9 @@ vdb_make_phylo <- function (metadata, sampleid_col = "sampleid", skip_seqs = TRU
   print("getting counts")
   counts <- get_counts_subset(unique(data.frame(metadata)[, 
                                                           sampleid_col]), pre_filter = !by_oligo_id)
+  # drop sampleids missing from database
+  metadata <- metadata[metadata[, sampleid_col] %in% unique(counts$sampleid), ]
+  
   print("creating otu table")
   if (by_oligo_id) sampleid_col <- "oligos_id"
   tab <- counts %>% dplyr::select(asv_key, all_of(sampleid_col), count) %>% 
@@ -159,7 +162,7 @@ vdb_make_phylo <- function (metadata, sampleid_col = "sampleid", skip_seqs = TRU
         dplyr::left_join(counts %>% dplyr::select(sampleid, oligos_id) %>% dplyr::distinct()) %>% tibble::column_to_rownames(sampleid_col)
     )
   } else{
-    samp <- phyloseq::sample_data(metadata  %>% tibble::column_to_rownames(sampleid_col))
+    samp <- phyloseq::sample_data(metadata %>% tibble::as_tibble() %>%  tibble::column_to_rownames(sampleid_col))
   }
   if (!skip_seqs) {
     if (!"asv_sequences_ag" %in% ls()) {
