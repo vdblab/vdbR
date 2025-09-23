@@ -120,6 +120,7 @@ padMRN <- base::Vectorize(USE.NAMES = FALSE, function(mrn) {
 #' @param metadata dataframe with at least one column sampleids; everything else is treated as sample info
 #' @param sampleid_col name of the column containing sampleids
 #' @param skip_seqs if true, sequences from asv_sequences_ag table will be included in phyloseq object.  Not enabled by default
+#' @param by_oligo_id if true, all pool/sample combinations will be included in the phyloseq object rather than picking the best sampleid.  Not enabled by default
 #' @export
 #' @name vdb_make_phylo
 #' @examples

@@ -220,10 +220,11 @@ test_that("excluding metaphlan failures is handled", {
 })
 
 test_that("phy by oligo_id builds correctly", {
-  tmp <- data.frame("sampleid" = c("2190B", "notarealsample"), group=c("A", "A"))
+  connect_database(bundled = TRUE)
+  tmp <- data.frame("sampleid" = c("1143N", "notarealsample"), group=c("A", "A"))
   ps_by_sampleid <- vdb_make_phylo(tmp, sampleid_col = "sampleid")
   ps_by_oligosid <- vdb_make_phylo(tmp, sampleid_col = "sampleid", by_oligo_id = TRUE)
-  expect_equal(length(phyloseq::sample_names(ps_by_sampleid)), 1)
-  expect_equal(length(phyloseq::sample_names(ps_by_oligosid)), 2)
+  expect_equal(phyloseq::sample_names(ps_by_sampleid), "1143N" )
+  expect_equal(phyloseq::sample_names(ps_by_oligosid), "1143N..pool655")
   
 })
