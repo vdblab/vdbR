@@ -219,6 +219,7 @@ test_that("excluding metaphlan failures is handled", {
   expect_error(get_metaphlan_analyses(con = psql_con, analysis_ids, include_failures=FALSE))  
 })
 
+
 test_that("phy by oligo_id builds correctly", {
   connect_database(bundled = TRUE)
   tmp <- data.frame("sampleid" = c("1143N", "notarealsample"), group=c("A", "A"))
