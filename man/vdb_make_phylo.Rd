@@ -16,7 +16,7 @@ vdb_make_phylo(
 
 \item{sampleid_col}{name of the column containing sampleids}
 
-\item{skip_seqs}{if true, sequences from asv_sequences_ag table will be included in phyloseq object.  Not enabled by default}
+\item{skip_seqs}{if true, sequences from asv_sequences_ag table will be omitted in phyloseq object.  Not enabled by default}
 
 \item{by_oligo_id}{if true, all pool/sample combinations will be included in the phyloseq object rather than picking the best sampleid.  Not enabled by default}
 }

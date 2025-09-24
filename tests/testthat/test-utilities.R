@@ -229,3 +229,15 @@ test_that("phy by oligo_id builds correctly", {
   expect_equal(phyloseq::sample_names(ps_by_oligosid), "1143N..pool655")
   
 })
+
+
+test_that("phy by oligo_id builds correctly with different sampleid_col", {
+  connect_database(bundled = TRUE)
+  tmp <- data.frame("doric" = c("1143N", "notarealsample"), group=c("A", "A"))
+  ps_by_sampleid <- vdb_make_phylo(tmp, sampleid_col = "doric")
+  ps_by_oligosid <- vdb_make_phylo(tmp, sampleid_col = "doric", by_oligo_id = TRUE)
+  expect_equal(phyloseq::sample_names(ps_by_sampleid), "1143N" )
+  expect_equal(phyloseq::sample_names(ps_by_oligosid), "1143N..pool655")
+  
+})
+

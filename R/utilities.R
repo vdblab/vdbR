@@ -7,6 +7,8 @@
 #'
 process_metadata <- function(metadata, sampleid_col){
   metadata <- as.data.frame(metadata)
+  if (!sampleid_col %in% colnames(metadata) ) stop("sampleid_col not in colnames of metadata supplied.")
+  if ("sampleid" %in% colnames(metadata) & sampleid_col != "sampleid") stop("sampleid_col can only be specified when no 'sampleid' column exists")
   if(length(unique(metadata[, sampleid_col])) != nrow(metadata)){
     stop(paste0("Metadata's sample id column ", sampleid_col, " must have unique entries"))
   } else if(any(is.na(metadata[, sampleid_col])) ){
@@ -16,6 +18,8 @@ process_metadata <- function(metadata, sampleid_col){
     warning("Phyloseq object must have at least one metadata column in addition to the sampleids; creating a new columns from the sampleids called x")
     metadata$x <- metadata[, sampleid_col]
   }
+  # unify the names
+  colnames(metadata)[colnames(metadata) == sampleid_col] <- "sampleid"
   metadata
 }
 
@@ -119,7 +123,7 @@ padMRN <- base::Vectorize(USE.NAMES = FALSE, function(mrn) {
 #'
 #' @param metadata dataframe with at least one column sampleids; everything else is treated as sample info
 #' @param sampleid_col name of the column containing sampleids
-#' @param skip_seqs if true, sequences from asv_sequences_ag table will be included in phyloseq object.  Not enabled by default
+#' @param skip_seqs if true, sequences from asv_sequences_ag table will be omitted in phyloseq object.  Not enabled by default
 #' @param by_oligo_id if true, all pool/sample combinations will be included in the phyloseq object rather than picking the best sampleid.  Not enabled by default
 #' @export
 #' @name vdb_make_phylo
@@ -132,19 +136,22 @@ vdb_make_phylo <- function (metadata, sampleid_col = "sampleid", skip_seqs = TRU
   if (!is.data.frame(metadata)) 
     stop("metadata must be a data.frame")
   
-  metadata <- process_metadata(metadata, sampleid_col)
+  metadata <- process_metadata(metadata, sampleid_col) 
   assert_db_connected()
   print("getting counts")
-  counts <- get_counts_subset(unique(data.frame(metadata)[, 
-                                                          sampleid_col]), pre_filter = !by_oligo_id)
+  counts <- get_counts_subset(metadata[,"sampleid"], pre_filter = !by_oligo_id)
   # drop sampleids missing from database
-  metadata <- metadata[metadata[, sampleid_col] %in% unique(counts$sampleid), ]
+  metadata <- metadata[metadata$sampleid %in% unique(counts$sampleid), ]
   
   print("creating otu table")
-  if (by_oligo_id) sampleid_col <- "oligos_id"
-  tab <- counts %>% dplyr::select(asv_key, all_of(sampleid_col), count) %>% 
+  if (by_oligo_id) {
+    internal_sampleid_column <- "oligos_id"
+  } else {
+    internal_sampleid_column = "sampleid"
+  }
+  tab <- counts %>% dplyr::select(asv_key, all_of(internal_sampleid_column), count) %>% 
     tidyr::pivot_wider(names_from = "asv_key", values_from = "count", 
-                       values_fill = 0) %>% tibble::column_to_rownames(sampleid_col)
+                       values_fill = 0) %>% tibble::column_to_rownames(internal_sampleid_column)
   ot <- phyloseq::otu_table(tab, taxa_are_rows = FALSE)
   if (!"asv_annotation_blast_ag" %in% ls()) {
     print("getting ASV annotations")
@@ -160,10 +167,10 @@ vdb_make_phylo <- function (metadata, sampleid_col = "sampleid", skip_seqs = TRU
   if (by_oligo_id){
     samp <- phyloseq::sample_data(
       metadata %>% 
-        dplyr::left_join(counts %>% dplyr::select(sampleid, oligos_id) %>% dplyr::distinct()) %>% tibble::column_to_rownames(sampleid_col)
+        dplyr::left_join(counts %>% dplyr::select(sampleid, oligos_id) %>% dplyr::distinct()) %>% tibble::column_to_rownames("oligos_id")
     )
   } else{
-    samp <- phyloseq::sample_data(metadata %>% tibble::as_tibble() %>%  tibble::column_to_rownames(sampleid_col))
+    samp <- phyloseq::sample_data(metadata %>% tibble::as_tibble() %>%  tibble::column_to_rownames("sampleid"))
   }
   if (!skip_seqs) {
     if (!"asv_sequences_ag" %in% ls()) {
@@ -355,23 +362,13 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
     "Please open a ticket on Github if you need extended functionality! "))
   }
 
-  # check that the sampleid_col is actually in metadata:
-  if (!any(sampleid_col %in% colnames(metadata))){
-    if (verbose){
-      print(paste("Sample id col:", sampleid_col, 
-      "not in colnames of metadata supplied:",
-      colnames(metadata),"check for typos and try again!"))
-    }
-    stop("sampleid_col not in colnames of metadata supplied.")
-  }
-
   # Pulling together tables from relevant sources section:
   #------------------------------------------------------------------------------------------------------
 
   # process metadata, and use it to fetch isabl tables related to these sample ids. 
   metadata <- process_metadata(metadata, sampleid_col)
   isabl_res <- get_sample_isabl_info(
-    list(metadata[, sampleid_col]), 
+    list(metadata$sampleid), 
     verbose=verbose, app_id=app_id, 
     schema = schema)
 
@@ -451,7 +448,7 @@ vdb_make_phylo_mgx <- function(metadata, sampleid_col = "sampleid", app_id = 66,
     dplyr::select(-c(experiment_id, experiment_identifier)) %>%
     unique()
   
-  samp <- metadata %>% dplyr::rename(sample_identifier = dplyr::all_of(sampleid_col)) %>%
+  samp <- metadata %>% dplyr::rename(sample_identifier = sampleid) %>%
     dplyr::full_join(abbreviated_md, by = dplyr::join_by(sample_identifier)) %>%
     tibble::column_to_rownames("sample_identifier") 
   if (any(is.na(samp$analysis_id))){
