@@ -4,14 +4,21 @@
 \alias{vdb_make_phylo}
 \title{Make a phyloseq object from some metadata with sampleids}
 \usage{
-vdb_make_phylo(metadata, sampleid_col = "sampleid", skip_seqs = TRUE)
+vdb_make_phylo(
+  metadata,
+  sampleid_col = "sampleid",
+  skip_seqs = TRUE,
+  by_oligo_id = FALSE
+)
 }
 \arguments{
 \item{metadata}{dataframe with at least one column sampleids; everything else is treated as sample info}
 
 \item{sampleid_col}{name of the column containing sampleids}
 
-\item{skip_seqs}{if true, sequences from asv_sequences_ag table will be included in phyloseq object.  Not enabled by default}
+\item{skip_seqs}{if true, sequences from asv_sequences_ag table will be omitted in phyloseq object.  Not enabled by default}
+
+\item{by_oligo_id}{if true, all pool/sample combinations will be included in the phyloseq object rather than picking the best sampleid.  Not enabled by default}
 }
 \description{
 Make a phyloseq object from some metadata with sampleids
